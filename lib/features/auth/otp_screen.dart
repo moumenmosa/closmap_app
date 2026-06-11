@@ -6,7 +6,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../core/config/app_config.dart';
 import '../../core/constants/design_assets.dart';
-import '../../core/models/app_user.dart';
+import '../../core/utils/auth_routing.dart';
 import '../../core/providers/providers.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/design/design_widgets.dart';
@@ -70,13 +70,8 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
       await ref.read(authServiceProvider).markEmailVerified(user.uid);
       if (!mounted) return;
       final appUser = await ref.read(authServiceProvider).getUser(user.uid);
-      if (appUser?.role == UserRole.admin) {
-        context.go('/admin/home');
-      } else if (appUser?.role == UserRole.employer) {
-        context.go('/employer/profile');
-      } else {
-        context.go('/seeker/profile-wizard');
-      }
+      if (!mounted || appUser == null) return;
+      context.go(homeRouteForUser(appUser));
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import '../../core/models/app_user.dart';
+import '../../core/utils/auth_routing.dart';
 import '../../core/providers/providers.dart';
+import '../../core/utils/auth_routing.dart';
 import '../../core/widgets/app_button.dart';
 import '../../firebase_options.dart';
 
@@ -26,14 +27,24 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
       context.go('/setup');
       return;
     }
-    final user = ref.read(authStateProvider).valueOrNull;
-    if (user == null) {
+    final authUser = ref.read(authStateProvider);
+    if (authUser.isLoading) {
+      Future.delayed(const Duration(milliseconds: 400), _navigate);
+      return;
+    }
+    final firebaseUser = authUser.valueOrNull;
+    if (firebaseUser == null) {
       final seenWelcome =
           ref.read(sharedPrefsProvider).getBool('seen_welcome') ?? false;
       context.go(seenWelcome ? '/login' : '/welcome');
       return;
     }
-    final appUser = ref.read(currentUserProvider).valueOrNull;
+    final appUserState = ref.read(currentUserProvider);
+    if (appUserState.isLoading) {
+      Future.delayed(const Duration(milliseconds: 400), _navigate);
+      return;
+    }
+    final appUser = appUserState.valueOrNull;
     if (appUser == null) {
       context.go('/login');
       return;
@@ -42,19 +53,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
       context.go('/otp');
       return;
     }
-    if (appUser.role == UserRole.admin) {
-      context.go('/admin/home');
-      return;
-    }
-    if (!appUser.profileCompleted) {
-      context.go(appUser.role == UserRole.employer
-          ? '/employer/profile'
-          : '/seeker/profile-wizard');
-      return;
-    }
-    context.go(appUser.role == UserRole.employer
-        ? '/employer/home'
-        : '/seeker/home');
+    context.go(homeRouteForUser(appUser));
   }
 
   @override

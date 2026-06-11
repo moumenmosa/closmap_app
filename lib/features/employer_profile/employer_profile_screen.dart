@@ -130,35 +130,43 @@ class _EmployerProfileScreenState extends ConsumerState<EmployerProfileScreen> {
   }
 
   Future<void> _save() async {
+    final l10n = AppLocalizations.of(context);
     final uid = ref.read(authStateProvider).valueOrNull?.uid;
     final user = ref.read(currentUserProvider).valueOrNull;
     if (uid == null) return;
     setState(() => _loading = true);
-    final profile = EmployerProfile(
-      uid: uid,
-      companyName: user?.companyName ?? '',
-      about: _about.text,
-      sector: _sector,
-      activity: _activity.text,
-      nationality: _nationality,
-      size: _size,
-      established: _established,
-      logoUrl: _logoUrl,
-      coverUrl: _coverUrl,
-      registrationNumber: _regNumber.text,
-      certificateUrl: _certificateUrl,
-      hqAddress: _hq.text,
-      operatingHours: _hours.text,
-      servicesOffered: _services.text,
-      website: _website.text,
-      lat: _location.latitude,
-      lng: _location.longitude,
-      geohash: GeoUtils.encode(_location.latitude, _location.longitude),
-    );
-    await ref.read(userRepositoryProvider).saveEmployerProfile(profile);
-    if (mounted) {
-      setState(() => _loading = false);
-      context.go('/employer/home');
+    try {
+      final profile = EmployerProfile(
+        uid: uid,
+        companyName: user?.companyName ?? '',
+        about: _about.text,
+        sector: _sector,
+        activity: _activity.text,
+        nationality: _nationality,
+        size: _size,
+        established: _established,
+        logoUrl: _logoUrl,
+        coverUrl: _coverUrl,
+        registrationNumber: _regNumber.text,
+        certificateUrl: _certificateUrl,
+        hqAddress: _hq.text,
+        operatingHours: _hours.text,
+        servicesOffered: _services.text,
+        website: _website.text,
+        lat: _location.latitude,
+        lng: _location.longitude,
+        geohash: GeoUtils.encode(_location.latitude, _location.longitude),
+      );
+      await ref.read(userRepositoryProvider).saveEmployerProfile(profile);
+      if (mounted) context.go('/employer/home');
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l10n.errorGeneric)),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _loading = false);
     }
   }
 

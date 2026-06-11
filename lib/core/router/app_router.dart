@@ -35,6 +35,7 @@ import '../../features/subscriptions/plans_screen.dart';
 import '../../features/subscriptions/subscriptions_screen.dart';
 import '../../firebase_options.dart';
 import '../models/app_user.dart';
+import '../utils/auth_routing.dart';
 import '../providers/providers.dart';
 
 final routerProvider = Provider<GoRouter>((ref) {
@@ -59,17 +60,23 @@ final routerProvider = Provider<GoRouter>((ref) {
       if (!loggedIn && !onAuth && state.matchedLocation != '/') {
         return '/login';
       }
+
+      final onSplash = state.matchedLocation == '/';
+
+      if (loggedIn && !onAuth && !onSplash) {
+        if (userState.isLoading) return null;
+        final user = userState.valueOrNull;
+        if (user == null) return '/login';
+        if (!user.emailVerified) return '/otp';
+        return homeRouteForUser(user);
+      }
+
       if (loggedIn && onAuth && state.matchedLocation != '/otp') {
+        if (userState.isLoading) return null;
         final user = userState.valueOrNull;
         if (user == null) return null;
         if (!user.emailVerified) return '/otp';
-        if (user.role == UserRole.admin) return '/admin/home';
-        if (!user.profileCompleted) {
-          return user.role == UserRole.employer
-              ? '/employer/profile'
-              : '/seeker/profile-wizard';
-        }
-        return user.role == UserRole.employer ? '/employer/home' : '/seeker/home';
+        return homeRouteForUser(user);
       }
       return null;
     },

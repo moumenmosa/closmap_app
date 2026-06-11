@@ -277,16 +277,34 @@ class _AddJobScreenState extends ConsumerState<AddJobScreen> {
     }
 
     setState(() => _loading = true);
-    await _saveDraft();
-    final id = _draftId!;
-    await ref.read(jobRepositoryProvider).publishJob(id, _validity);
-    await ref.read(subscriptionRepositoryProvider).deductPoint(
-          user.uid,
-          'Published job: $_title',
+    final subRepo = ref.read(subscriptionRepositoryProvider);
+    try {
+      await _saveDraft();
+      final id = _draftId!;
+      final ok = await subRepo.deductPoint(user.uid, 'Published job: $_title');
+      if (!ok) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(l10n.insufficientPoints)),
+          );
+        }
+        return;
+      }
+      try {
+        await ref.read(jobRepositoryProvider).publishJob(id, _validity);
+      } catch (e) {
+        await subRepo.refundPoint(user.uid, 'Refund: failed publish $_title');
+        rethrow;
+      }
+      if (mounted) context.pop();
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l10n.errorGeneric)),
         );
-    if (mounted) {
-      setState(() => _loading = false);
-      context.pop();
+      }
+    } finally {
+      if (mounted) setState(() => _loading = false);
     }
   }
 

@@ -75,10 +75,13 @@ class _SeekerHomeScreenState extends ConsumerState<SeekerHomeScreen> {
   }
 
   Future<void> _initLocation() async {
-    final perm = await Geolocator.requestPermission();
-    if (perm == LocationPermission.denied) return;
-    final pos = await Geolocator.getCurrentPosition();
-    setState(() => _userLocation = LatLng(pos.latitude, pos.longitude));
+    try {
+      final perm = await Geolocator.requestPermission();
+      if (perm == LocationPermission.denied || !mounted) return;
+      final pos = await Geolocator.getCurrentPosition();
+      if (!mounted) return;
+      setState(() => _userLocation = LatLng(pos.latitude, pos.longitude));
+    } catch (_) {}
   }
 
   Future<void> _openJobTitleFilter() async {

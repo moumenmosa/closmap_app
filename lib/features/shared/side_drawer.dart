@@ -38,6 +38,15 @@ class SideDrawer extends ConsumerWidget {
               ),
             if (user.role == UserRole.seeker)
               ListTile(
+                leading: const Icon(Icons.work_history_outlined),
+                title: Text(l10n.applied),
+                onTap: () {
+                  Navigator.pop(context);
+                  context.push('/applications');
+                },
+              ),
+            if (user.role == UserRole.seeker)
+              ListTile(
                 leading: const Icon(Icons.explore_outlined),
                 title: Text(l10n.exploringSpots),
                 onTap: () {

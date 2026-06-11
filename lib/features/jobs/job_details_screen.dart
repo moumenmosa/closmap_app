@@ -5,6 +5,7 @@ import 'package:geolocator/geolocator.dart';
 import 'package:go_router/go_router.dart';
 import '../../core/models/employer_profile.dart';
 import '../../core/models/job_post.dart';
+import '../../core/models/app_user.dart';
 import '../../core/providers/providers.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_theme.dart';
@@ -31,6 +32,7 @@ class _JobDetailsScreenState extends ConsumerState<JobDetailsScreen> {
   bool _applied = false;
   bool _saved = false;
   bool _loading = false;
+  bool _loadComplete = false;
   double? _userLat;
   double? _userLng;
 
@@ -43,7 +45,7 @@ class _JobDetailsScreenState extends ConsumerState<JobDetailsScreen> {
   Future<void> _load() async {
     final job = await ref.read(jobRepositoryProvider).getJob(widget.jobId);
     if (job == null) {
-      if (mounted) setState(() => _job = null);
+      if (mounted) setState(() => _loadComplete = true);
       return;
     }
 
@@ -74,6 +76,7 @@ class _JobDetailsScreenState extends ConsumerState<JobDetailsScreen> {
         _employer = employer;
         _applied = applied;
         _saved = saved;
+        _loadComplete = true;
       });
     }
   }
@@ -132,9 +135,23 @@ class _JobDetailsScreenState extends ConsumerState<JobDetailsScreen> {
       return;
     }
 
+    if (pos == null &&
+        user.activeTier != SubscriptionTier.gold &&
+        user.hasActiveSubscription) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Location is required to verify your subscription area'),
+          ),
+        );
+      }
+      return;
+    }
+
     setState(() => _loading = true);
+    final subRepo = ref.read(subscriptionRepositoryProvider);
     try {
-      final ok = await ref.read(subscriptionRepositoryProvider).deductPoint(
+      final ok = await subRepo.deductPoint(
             user.uid,
             'Applied to ${job.title}',
           );
@@ -147,21 +164,26 @@ class _JobDetailsScreenState extends ConsumerState<JobDetailsScreen> {
         return;
       }
 
-      await ref.read(applicationRepositoryProvider).apply(
-            jobId: job.id,
-            seekerId: user.uid,
-            employerId: job.employerId,
-            jobTitle: job.title,
-            companyName: job.companyName,
-            seekerName: user.displayName,
-          );
-      await ref.read(jobRepositoryProvider).incrementApplicants(job.id);
-      await ref.read(notificationServiceProvider).send(
-            userId: job.employerId,
-            subject: 'New applicant',
-            body: '${user.displayName} applied for ${job.title}',
-            route: '/employer/job/${job.id}/applicants',
-          );
+      try {
+        await ref.read(applicationRepositoryProvider).apply(
+              jobId: job.id,
+              seekerId: user.uid,
+              employerId: job.employerId,
+              jobTitle: job.title,
+              companyName: job.companyName,
+              seekerName: user.displayName,
+            );
+        await ref.read(jobRepositoryProvider).incrementApplicants(job.id);
+        await ref.read(notificationServiceProvider).send(
+              userId: job.employerId,
+              subject: 'New applicant',
+              body: '${user.displayName} applied for ${job.title}',
+              route: '/employer/job/${job.id}/applicants',
+            );
+      } catch (e) {
+        await subRepo.refundPoint(user.uid, 'Refund: failed apply to ${job.title}');
+        rethrow;
+      }
 
       if (mounted) {
         setState(() => _applied = true);
@@ -170,6 +192,12 @@ class _JobDetailsScreenState extends ConsumerState<JobDetailsScreen> {
           ref: ref,
           companyName: job.companyName,
           user: user,
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l10n.errorGeneric)),
         );
       }
     } finally {
@@ -202,10 +230,20 @@ class _JobDetailsScreenState extends ConsumerState<JobDetailsScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    if (_job == null) {
+    if (!_loadComplete) {
       return Scaffold(
         backgroundColor: AppColors.scaffoldBg,
         body: const LoadingView(),
+      );
+    }
+    if (_job == null) {
+      return Scaffold(
+        backgroundColor: AppColors.scaffoldBg,
+        appBar: AppBar(title: Text(l10n.jobs)),
+        body: EmptyState(
+          message: l10n.noResults,
+          icon: Icons.work_off_outlined,
+        ),
       );
     }
 

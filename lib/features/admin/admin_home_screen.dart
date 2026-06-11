@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -63,38 +62,6 @@ class AdminHomeScreen extends ConsumerWidget {
             label: l10n.settings,
             onPressed: () => context.push('/settings'),
             backgroundColor: AppColors.primary,
-          ),
-          if (kDebugMode) ...[
-            const SizedBox(height: 12),
-            DesignPrimaryButton(
-              label: l10n.seedDemoData,
-              onPressed: () async {
-                try {
-                  await ref.read(seedServiceProvider).seedLookups();
-                  if (context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text(
-                          'Catalog seed attempted (full demo: cd tools && npm run seed)',
-                        ),
-                      ),
-                    );
-                  }
-                } catch (e) {
-                  if (context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('$e')),
-                    );
-                  }
-                }
-              },
-            ),
-          ],
-          const SizedBox(height: 24),
-          Text(
-            'Full dataset seed: cd tools && npm run seed',
-            style: TextStyle(color: AppColors.textSecondary, fontSize: 13),
-            textAlign: TextAlign.center,
           ),
         ],
       ),

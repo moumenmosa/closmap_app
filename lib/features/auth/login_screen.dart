@@ -1,9 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:local_auth/local_auth.dart';
 import '../../core/providers/providers.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/utils/validators.dart';
@@ -27,7 +25,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _email = TextEditingController();
   final _password = TextEditingController();
   bool _loading = false;
-  final _localAuth = LocalAuthentication();
 
   @override
   void initState() {
@@ -80,6 +77,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       );
     } catch (e) {
       if (!mounted) return;
+      if (e.toString().contains('email_not_verified')) {
+        context.go('/otp');
+        return;
+      }
       final msg = e.toString().contains('account_locked')
           ? l10n.accountLocked
           : e.toString().contains('email_not_verified')
@@ -88,49 +89,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
     } finally {
       if (mounted) setState(() => _loading = false);
-    }
-  }
-
-  Future<void> _biometricLogin() async {
-    final can = await _localAuth.canCheckBiometrics;
-    if (!can) {
-      await _login();
-      return;
-    }
-    final ok = await _localAuth.authenticate(
-      localizedReason: AppLocalizations.of(context).biometricLogin,
-      options: const AuthenticationOptions(biometricOnly: false),
-    );
-    if (!ok || !mounted) return;
-    final saved = ref.read(sharedPrefsProvider).getString(_savedEmailKey);
-    if (saved != null && saved.isNotEmpty) {
-      setState(() => _email.text = saved);
-    }
-    if (_password.text.isNotEmpty) {
-      await _login();
-    }
-  }
-
-  Future<void> _seed() async {
-    try {
-      await ref.read(seedServiceProvider).seedLookups();
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Catalog seeded (plans, packages, lookups)'),
-          ),
-        );
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              'Catalog seed failed (use: cd tools && npm run seed). $e',
-            ),
-          ),
-        );
-      }
     }
   }
 
@@ -228,12 +186,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     ),
                   ),
                 ),
-                if (kDebugMode) ...[
-                  TextButton(
-                    onPressed: _seed,
-                    child: Text(l10n.seedDemoData),
-                  ),
-                ],
               ],
             ),
           ),

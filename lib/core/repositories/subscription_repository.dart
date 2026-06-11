@@ -65,6 +65,18 @@ class SubscriptionRepository {
     return true;
   }
 
+  Future<void> refundPoint(String uid, String description) async {
+    await _db.collection('users').doc(uid).update({
+      'points': FieldValue.increment(1),
+    });
+    await _addTransaction(
+      uid: uid,
+      type: 'refund',
+      description: description,
+      pointsDelta: 1,
+    );
+  }
+
   Future<void> _addTransaction({
     required String uid,
     required String type,
