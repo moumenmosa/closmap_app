@@ -1,0 +1,261 @@
+{
+  "demoPassword": "Demo1234!",
+  "lookups": {
+    "genders": ["Male", "Female"],
+    "maritalStatuses": ["Single", "Married"],
+    "nationalities": ["Saudi", "Jordanian", "Egyptian", "Emirati", "Other"],
+    "countries": ["Saudi Arabia", "Jordan", "UAE", "Egypt", "Other"],
+    "proficiencyLevels": ["Beginner", "Intermediate", "Advanced", "Native/Bilingual"],
+    "employmentTypes": ["Full-Time", "Part-Time", "Contract", "Internship"],
+    "educationLevels": ["High School", "Diploma", "Bachelor's Degree", "Master's Degree", "PhD"],
+    "educationFields": ["Arts & Design", "Engineering", "Business", "IT", "Healthcare", "Other"],
+    "jobTitles": ["UX/UI Designer", "Software Engineer", "Project Manager", "Marketing Specialist", "Data Analyst", "HR Manager"],
+    "experienceLevels": ["Junior", "Mid-Level", "Senior", "Team Lead", "Manager"],
+    "companySectors": ["Technology", "Healthcare", "Finance", "Retail", "Education", "Other"],
+    "companySizes": ["1-10", "11-50", "51-200", "201-500", "500+"],
+    "remoteOptions": ["On Site", "Remote", "Hybrid"],
+    "genderTypes": ["All", "Male", "Female"],
+    "languages": ["Arabic", "English", "French", "German"],
+    "searchSuggestions": ["Remote", "UX/UI Designer", "Software Engineer", "Full-Time", "Riyadh"]
+  },
+  "plans": {
+    "bronze": {
+      "name": "Bronze",
+      "price": 49,
+      "points": 30,
+      "currency": "SR",
+      "description": "Apply within your city. 1 exploring spot.",
+      "features": ["City-level applications", "1 exploring spot", "30 points/month"]
+    },
+    "silver": {
+      "name": "Silver",
+      "price": 99,
+      "points": 80,
+      "currency": "SR",
+      "description": "Apply within your country. 3 exploring spots.",
+      "features": ["Country-level applications", "3 exploring spots", "80 points/month"]
+    },
+    "gold": {
+      "name": "Gold",
+      "price": 199,
+      "points": 150,
+      "currency": "SR",
+      "description": "Apply globally. 5 exploring spots.",
+      "features": ["Global applications", "5 exploring spots", "150 points/month"]
+    }
+  },
+  "pointPackages": {
+    "pkg10": { "points": 10, "price": 15, "currency": "SR" },
+    "pkg25": { "points": 25, "price": 35, "currency": "SR" },
+    "pkg50": { "points": 50, "price": 65, "currency": "SR" }
+  },
+  "defaultNotificationPrefs": {
+    "pushType1": true,
+    "pushType2": false,
+    "pushType3": false,
+    "emailOnMatch": false
+  },
+  "leaderboard": [
+    { "id": "1", "rank": 1, "companyName": "TechCorp Solutions", "logoUrl": "https://res.cloudinary.com/ddoknf9ir/image/upload/v1/demo/techcorp_logo.png", "score": 128 },
+    { "id": "2", "rank": 2, "companyName": "HealthCo Medical", "logoUrl": "https://res.cloudinary.com/ddoknf9ir/image/upload/v1/demo/healthco_logo.png", "score": 96 },
+    { "id": "3", "rank": 3, "companyName": "Design Studio Riyadh", "logoUrl": "", "score": 84 },
+    { "id": "4", "rank": 4, "companyName": "Gulf Logistics", "logoUrl": "", "score": 72 },
+    { "id": "5", "rank": 5, "companyName": "Saudi FinTech", "logoUrl": "", "score": 65 },
+    { "id": "6", "rank": 6, "companyName": "Retail Partners", "logoUrl": "", "score": 58 },
+    { "id": "7", "rank": 7, "companyName": "EduSmart", "logoUrl": "", "score": 51 }
+  ],
+  "accounts": [
+    {
+      "email": "admin@closemap.demo",
+      "role": "admin",
+      "firstName": "CloseMap",
+      "lastName": "Admin",
+      "phone": "+966500000001",
+      "language": "en",
+      "points": 0,
+      "tier": "none",
+      "subscriptionDays": 365,
+      "notificationPrefs": {
+        "email": true,
+        "push": true,
+        "sms": false
+      }
+    },
+    {
+      "email": "sarah.seeker@closemap.demo",
+      "role": "seeker",
+      "firstName": "Sarah",
+      "lastName": "Al-Harbi",
+      "phone": "+966501234567",
+      "language": "en",
+      "points": 25,
+      "tier": "silver",
+      "subscriptionDays": 20,
+      "latestJobTitle": "UX/UI Designer",
+      "seekerProfile": {
+        "gender": "Female",
+        "maritalStatus": "Single",
+        "nationality": "Saudi",
+        "countryOfResidence": "Saudi Arabia",
+        "city": "Riyadh",
+        "lat": 24.72,
+        "lng": 46.68,
+        "education": [{ "level": "Bachelor's Degree", "field": "Arts & Design" }],
+        "experience": [{ "jobTitle": "UX/UI Designer", "employmentType": "Full-Time", "companyName": "Design Studio", "ongoing": true }],
+        "languages": [{ "language": "Arabic", "proficiency": "Native/Bilingual" }, { "language": "English", "proficiency": "Advanced" }],
+        "skills": [{ "name": "Figma", "source": "experience" }, { "name": "UI Design", "source": "experience" }],
+        "resumeUrl": "https://res.cloudinary.com/ddoknf9ir/raw/upload/v1/demo/sarah_cv.pdf",
+        "resumeName": "Sarah_CV.pdf",
+        "linkedInUrl": "https://linkedin.com/in/sarah-demo"
+      }
+    },
+    {
+      "email": "omar.seeker@closemap.demo",
+      "role": "seeker",
+      "firstName": "Omar",
+      "lastName": "Khalid",
+      "phone": "+966509876543",
+      "language": "ar",
+      "points": 12,
+      "tier": "bronze",
+      "subscriptionDays": 25,
+      "latestJobTitle": "Software Engineer",
+      "seekerProfile": {
+        "gender": "Male",
+        "maritalStatus": "Married",
+        "nationality": "Jordanian",
+        "countryOfResidence": "Saudi Arabia",
+        "city": "Riyadh",
+        "lat": 24.75,
+        "lng": 46.72,
+        "education": [{ "level": "Bachelor's Degree", "field": "IT" }],
+        "experience": [{ "jobTitle": "Software Engineer", "employmentType": "Full-Time", "companyName": "Tech Labs", "ongoing": true }],
+        "languages": [{ "language": "Arabic", "proficiency": "Native/Bilingual" }, { "language": "English", "proficiency": "Advanced" }],
+        "skills": [{ "name": "Flutter", "source": "experience" }, { "name": "Dart", "source": "experience" }],
+        "resumeUrl": "https://res.cloudinary.com/ddoknf9ir/raw/upload/v1/demo/omar_cv.pdf",
+        "resumeName": "Omar_CV.pdf"
+      }
+    },
+    {
+      "email": "techcorp@closemap.demo",
+      "role": "employer",
+      "companyName": "TechCorp Solutions",
+      "phone": "+966112345678",
+      "language": "en",
+      "points": 40,
+      "tier": "gold",
+      "subscriptionDays": 28,
+      "employerProfile": {
+        "companyName": "TechCorp Solutions",
+        "about": "Leading technology company in Riyadh.",
+        "sector": "Technology",
+        "size": "51-200",
+        "nationality": "Saudi",
+        "city": "Riyadh",
+        "country": "Saudi Arabia",
+        "hqAddress": "King Fahd Road, Riyadh",
+        "lat": 24.7136,
+        "lng": 46.6753,
+        "geohash": "th3hw",
+        "logoUrl": "https://res.cloudinary.com/ddoknf9ir/image/upload/v1/demo/techcorp_logo.png",
+        "website": "https://techcorp.demo"
+      }
+    },
+    {
+      "email": "healthco@closemap.demo",
+      "role": "employer",
+      "companyName": "HealthCo Medical",
+      "phone": "+966118765432",
+      "language": "en",
+      "points": 15,
+      "tier": "silver",
+      "subscriptionDays": 15,
+      "employerProfile": {
+        "companyName": "HealthCo Medical",
+        "about": "Healthcare services provider.",
+        "sector": "Healthcare",
+        "size": "201-500",
+        "nationality": "Saudi",
+        "city": "Riyadh",
+        "country": "Saudi Arabia",
+        "hqAddress": "Olaya District, Riyadh",
+        "lat": 24.69,
+        "lng": 46.685,
+        "geohash": "th3hx",
+        "logoUrl": "https://res.cloudinary.com/ddoknf9ir/image/upload/v1/demo/healthco_logo.png"
+      }
+    }
+  ],
+  "jobKeys": {
+    "job_ux_active": {
+      "employerEmail": "techcorp@closemap.demo",
+      "title": "UX/UI Designer",
+      "skills": ["Figma", "UI Design"],
+      "requiredSkills": ["Figma", "UI Design", "Project Management"],
+      "languages": ["Arabic", "English"],
+      "fieldOfEducation": "Arts & Design",
+      "about": "Join TechCorp Solutions and help shape digital products used across the region. We value design thinking, collaboration, and user-centered craft.",
+      "benefits": ["Health Insurance", "Remote Flexibility", "Learning Budget", "Gym Discounts"],
+      "status": "active",
+      "validityDays": 14,
+      "lat": 24.714,
+      "lng": 46.676,
+      "applicantsCount": 2
+    },
+    "job_engineer_active": {
+      "employerEmail": "techcorp@closemap.demo",
+      "title": "Software Engineer",
+      "skills": ["Flutter", "Dart"],
+      "requiredSkills": ["Flutter", "Dart"],
+      "languages": ["English"],
+      "fieldOfEducation": "IT",
+      "about": "Build cross-platform mobile apps with a modern Flutter stack in a fast-growing product team.",
+      "benefits": ["Health Insurance", "Stock Options", "Flexible Hours"],
+      "status": "active",
+      "validityDays": 7,
+      "lat": 24.716,
+      "lng": 46.678,
+      "applicantsCount": 1
+    },
+    "job_nurse_active": {
+      "employerEmail": "healthco@closemap.demo",
+      "title": "Registered Nurse",
+      "skills": ["Patient Care"],
+      "requiredSkills": ["Patient Care"],
+      "languages": ["Arabic"],
+      "fieldOfEducation": "Healthcare",
+      "about": "Provide compassionate patient care at one of Riyadh's leading healthcare providers.",
+      "benefits": ["Health Insurance", "Shift Allowance", "Annual Leave"],
+      "status": "active",
+      "validityDays": 10,
+      "lat": 24.691,
+      "lng": 46.686,
+      "applicantsCount": 0
+    },
+    "job_draft": {
+      "employerEmail": "techcorp@closemap.demo",
+      "title": "Data Analyst",
+      "skills": ["SQL"],
+      "requiredSkills": ["SQL"],
+      "about": "Analyze product and business data to drive decisions.",
+      "benefits": ["Health Insurance"],
+      "status": "draft",
+      "validityDays": 7,
+      "lat": 24.713,
+      "lng": 46.675
+    },
+    "job_expired": {
+      "employerEmail": "healthco@closemap.demo",
+      "title": "HR Manager",
+      "skills": ["Recruitment"],
+      "requiredSkills": ["Recruitment"],
+      "about": "Lead talent acquisition and employee engagement programs.",
+      "benefits": ["Health Insurance", "Performance Bonus"],
+      "status": "active",
+      "validityDays": 3,
+      "expiredDaysAgo": 2,
+      "lat": 24.692,
+      "lng": 46.687
+    }
+  }
+}

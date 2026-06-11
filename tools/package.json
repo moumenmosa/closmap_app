@@ -1,0 +1,13 @@
+{
+  "name": "closemap-seed",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "seed": "node seed_demo.mjs --project closemap-app",
+    "seed:wipe": "node seed_demo.mjs --project closemap-app --wipe"
+  },
+  "dependencies": {
+    "firebase-admin": "^13.0.2",
+    "google-auth-library": "^9.15.1"
+  }
+}

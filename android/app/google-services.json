@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "91046174790",
+    "project_id": "closemap-app",
+    "storage_bucket": "closemap-app.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:91046174790:android:0e8def9709eae18b052a47",
+        "android_client_info": {
+          "package_name": "com.closemap.closemap"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCpLOTXvd75Hzvvws3EkDRwf4XK8q_6rTg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
