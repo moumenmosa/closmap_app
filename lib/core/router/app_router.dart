@@ -34,7 +34,6 @@ import '../../features/subscriptions/payment_screen.dart';
 import '../../features/subscriptions/plans_screen.dart';
 import '../../features/subscriptions/subscriptions_screen.dart';
 import '../../firebase_options.dart';
-import '../models/app_user.dart';
 import '../utils/auth_routing.dart';
 import '../providers/providers.dart';
 
@@ -68,7 +67,8 @@ final routerProvider = Provider<GoRouter>((ref) {
         final user = userState.valueOrNull;
         if (user == null) return '/login';
         if (!user.emailVerified) return '/otp';
-        return homeRouteForUser(user);
+        // Verified user on an in-app route: allow navigation.
+        return null;
       }
 
       if (loggedIn && onAuth && state.matchedLocation != '/otp') {
@@ -81,24 +81,24 @@ final routerProvider = Provider<GoRouter>((ref) {
       return null;
     },
     routes: [
-      GoRoute(path: '/', builder: (_, __) => const SplashScreen()),
+      GoRoute(path: '/', builder: (_, _) => const SplashScreen()),
       GoRoute(
         path: '/setup',
-        builder: (_, __) => const SetupFirebaseScreen(),
+        builder: (_, _) => const SetupFirebaseScreen(),
       ),
-      GoRoute(path: '/welcome', builder: (_, __) => const WelcomeScreen()),
-      GoRoute(path: '/login', builder: (_, __) => const LoginScreen()),
-      GoRoute(path: '/register', builder: (_, __) => const RegisterScreen()),
-      GoRoute(path: '/otp', builder: (_, __) => const OtpScreen()),
+      GoRoute(path: '/welcome', builder: (_, _) => const WelcomeScreen()),
+      GoRoute(path: '/login', builder: (_, _) => const LoginScreen()),
+      GoRoute(path: '/register', builder: (_, _) => const RegisterScreen()),
+      GoRoute(path: '/otp', builder: (_, _) => const OtpScreen()),
       GoRoute(
         path: '/forgot-password',
-        builder: (_, __) => const ForgotPasswordScreen(),
+        builder: (_, _) => const ForgotPasswordScreen(),
       ),
-      GoRoute(path: '/admin/home', builder: (_, __) => const AdminHomeScreen()),
-      GoRoute(path: '/seeker/home', builder: (_, __) => const SeekerHomeScreen()),
+      GoRoute(path: '/admin/home', builder: (_, _) => const AdminHomeScreen()),
+      GoRoute(path: '/seeker/home', builder: (_, _) => const SeekerHomeScreen()),
       GoRoute(
         path: '/employer/home',
-        builder: (_, __) => const EmployerHomeScreen(),
+        builder: (_, _) => const EmployerHomeScreen(),
       ),
       GoRoute(
         path: '/seeker/profile-wizard',
@@ -109,11 +109,11 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: '/seeker/profile',
-        builder: (_, __) => const SeekerProfileScreen(),
+        builder: (_, _) => const SeekerProfileScreen(),
       ),
       GoRoute(
         path: '/employer/profile',
-        builder: (_, __) => const EmployerProfileScreen(),
+        builder: (_, _) => const EmployerProfileScreen(),
       ),
       GoRoute(
         path: '/job/:id',
@@ -126,9 +126,9 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: '/applications',
-        builder: (_, __) => const ApplicationsScreen(),
+        builder: (_, _) => const ApplicationsScreen(),
       ),
-      GoRoute(path: '/search', builder: (_, __) => const SearchScreen()),
+      GoRoute(path: '/search', builder: (_, _) => const SearchScreen()),
       GoRoute(
         path: '/filter',
         builder: (_, state) => FilterScreen(
@@ -137,7 +137,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: '/employer/jobs',
-        builder: (_, __) => const PostedJobsScreen(),
+        builder: (_, _) => const PostedJobsScreen(),
       ),
       GoRoute(
         path: '/employer/job/add',
@@ -150,18 +150,18 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: '/employer/headhunting',
-        builder: (_, __) => const HeadhuntingScreen(),
+        builder: (_, _) => const HeadhuntingScreen(),
       ),
       GoRoute(
         path: '/spots',
-        builder: (_, __) => const ExploringSpotsScreen(),
+        builder: (_, _) => const ExploringSpotsScreen(),
       ),
-      GoRoute(path: '/spots/add', builder: (_, __) => const AddSpotScreen()),
+      GoRoute(path: '/spots/add', builder: (_, _) => const AddSpotScreen()),
       GoRoute(
         path: '/subscriptions',
-        builder: (_, __) => const SubscriptionsScreen(),
+        builder: (_, _) => const SubscriptionsScreen(),
       ),
-      GoRoute(path: '/plans', builder: (_, __) => const PlansScreen()),
+      GoRoute(path: '/plans', builder: (_, _) => const PlansScreen()),
       GoRoute(
         path: '/payment',
         builder: (_, state) => PaymentScreen(
@@ -171,11 +171,11 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: '/notifications',
-        builder: (_, __) => const NotificationsScreen(),
+        builder: (_, _) => const NotificationsScreen(),
       ),
-      GoRoute(path: '/settings', builder: (_, __) => const SettingsScreen()),
-      GoRoute(path: '/leaderboard', builder: (_, __) => const LeaderboardScreen()),
-      GoRoute(path: '/about', builder: (_, __) => const AboutAppScreen()),
+      GoRoute(path: '/settings', builder: (_, _) => const SettingsScreen()),
+      GoRoute(path: '/leaderboard', builder: (_, _) => const LeaderboardScreen()),
+      GoRoute(path: '/about', builder: (_, _) => const AboutAppScreen()),
     ],
   );
 });

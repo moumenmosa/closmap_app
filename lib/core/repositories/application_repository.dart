@@ -18,6 +18,8 @@ class ApplicationRepository {
     return snap.docs.isNotEmpty;
   }
 
+  /// Creates the application atomically using a deterministic doc id so a
+  /// seeker can never apply twice to the same job, even with rapid taps.
   Future<String> apply({
     required String jobId,
     required String seekerId,
@@ -26,18 +28,25 @@ class ApplicationRepository {
     required String companyName,
     required String seekerName,
   }) async {
-    final ref = await _db.collection('applications').add({
-      'jobId': jobId,
-      'seekerId': seekerId,
-      'employerId': employerId,
-      'jobTitle': jobTitle,
-      'companyName': companyName,
-      'seekerName': seekerName,
-      'status': 'pending',
-      'appliedAt': FieldValue.serverTimestamp(),
-      'removedBySeeker': false,
+    final docRef = _db.collection('applications').doc('${seekerId}_$jobId');
+    final created = await _db.runTransaction<bool>((tx) async {
+      final existing = await tx.get(docRef);
+      if (existing.exists) return false;
+      tx.set(docRef, {
+        'jobId': jobId,
+        'seekerId': seekerId,
+        'employerId': employerId,
+        'jobTitle': jobTitle,
+        'companyName': companyName,
+        'seekerName': seekerName,
+        'status': 'pending',
+        'appliedAt': FieldValue.serverTimestamp(),
+        'removedBySeeker': false,
+      });
+      return true;
     });
-    return ref.id;
+    if (!created) throw StateError('already_applied');
+    return docRef.id;
   }
 
   Stream<List<JobApplication>> watchSeekerApplications(String seekerId) {

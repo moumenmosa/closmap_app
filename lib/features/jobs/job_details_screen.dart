@@ -108,6 +108,19 @@ class _JobDetailsScreenState extends ConsumerState<JobDetailsScreen> {
       return;
     }
 
+    final alreadyApplied = await ref
+        .read(applicationRepositoryProvider)
+        .hasApplied(user.uid, job.id);
+    if (alreadyApplied) {
+      if (mounted) {
+        setState(() => _applied = true);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l10n.applied)),
+        );
+      }
+      return;
+    }
+
     final profile = await ref.read(userRepositoryProvider).getSeekerProfile(user.uid);
     Position? pos;
     try {
@@ -196,8 +209,10 @@ class _JobDetailsScreenState extends ConsumerState<JobDetailsScreen> {
       }
     } catch (e) {
       if (mounted) {
+        final duplicate = e is StateError && e.message == 'already_applied';
+        if (duplicate) setState(() => _applied = true);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.errorGeneric)),
+          SnackBar(content: Text(duplicate ? l10n.applied : l10n.errorGeneric)),
         );
       }
     } finally {

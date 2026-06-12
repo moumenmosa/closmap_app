@@ -2,7 +2,6 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import '../../core/constants/design_assets.dart';
 import '../../core/constants/lookups.dart';
 import '../../core/models/app_user.dart';
 import '../../core/providers/providers.dart';
@@ -35,6 +34,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   final _confirmPassword = TextEditingController();
 
   String? _validate(String? key, AppLocalizations l10n) {
+    if (key == null) return null;
     switch (key) {
       case 'required':
         return l10n.requiredField;
@@ -44,6 +44,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
         return l10n.passwordWeak;
       case 'mismatch':
         return l10n.passwordMismatch;
+      case 'invalid':
+      case 'too_long':
+        return l10n.requiredField;
       default:
         return l10n.errorGeneric;
     }

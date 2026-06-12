@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../core/models/app_user.dart';
 import '../../core/models/notification_prefs.dart';
 import '../../core/providers/providers.dart';
 import '../../core/theme/app_colors.dart';
@@ -74,9 +75,32 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final user = ref.watch(currentUserProvider).valueOrNull;
-    if (user == null) return const SizedBox.shrink();
+    final userAsync = ref.watch(currentUserProvider);
+    return userAsync.when(
+      loading: () => Scaffold(
+        backgroundColor: AppColors.scaffoldBg,
+        appBar: DesignAppBar(title: l10n.settings),
+        body: const LoadingView(),
+      ),
+      error: (_, __) => Scaffold(
+        backgroundColor: AppColors.scaffoldBg,
+        appBar: DesignAppBar(title: l10n.settings),
+        body: EmptyState(message: l10n.errorGeneric),
+      ),
+      data: (user) {
+        if (user == null) {
+          return Scaffold(
+            backgroundColor: AppColors.scaffoldBg,
+            appBar: DesignAppBar(title: l10n.settings),
+            body: EmptyState(message: l10n.errorGeneric),
+          );
+        }
+        return _buildBody(l10n, user);
+      },
+    );
+  }
 
+  Widget _buildBody(AppLocalizations l10n, AppUser user) {
     final prefs = _prefs ?? user.notificationPrefs;
     final locale = ref.watch(localeProvider);
     final languageLabel = locale == 'ar' ? l10n.arabic : l10n.english;

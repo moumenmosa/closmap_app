@@ -83,7 +83,9 @@ class _AddJobScreenState extends ConsumerState<AddJobScreen> {
   LatLng _pin = const LatLng(24.7136, 46.6753);
   int _validity = Lookups.validityDaysOptions[1];
   bool _loading = false;
+  bool _published = false;
   String? _draftId;
+  String _status = 'draft';
 
   @override
   void initState() {
@@ -99,6 +101,7 @@ class _AddJobScreenState extends ConsumerState<AddJobScreen> {
     if (job == null || !mounted) return;
     setState(() {
       _draftId = job.id;
+      _status = job.status.isNotEmpty ? job.status : _status;
       _title = job.title.isNotEmpty ? job.title : _title;
       _experienceLevel =
           job.experienceLevel.isNotEmpty ? job.experienceLevel : _experienceLevel;
@@ -140,7 +143,9 @@ class _AddJobScreenState extends ConsumerState<AddJobScreen> {
 
   @override
   void dispose() {
-    _saveDraft();
+    // Saving a draft after publish would overwrite status back to 'draft'
+    // and silently unpublish the job.
+    if (!_published) _saveDraft();
     _about.dispose();
     _duties.dispose();
     _location.dispose();
@@ -252,13 +257,16 @@ class _AddJobScreenState extends ConsumerState<AddJobScreen> {
         lng: _pin.longitude,
         geohash: GeoUtils.encode(_pin.latitude, _pin.longitude),
         validityDays: _validity,
-        status: 'draft',
+        status: _status,
         createdAt: DateTime.now(),
       );
 
   Future<void> _saveDraft() async {
     final user = ref.read(currentUserProvider).valueOrNull;
     if (user == null || _title.isEmpty) return;
+    // Never autosave over a published job: toMap() would null out
+    // publishedAt/expiresAt and hide the job from active listings.
+    if (_status != 'draft') return;
     final job = _buildJob(user.uid, user.companyName);
     final id = await ref.read(jobRepositoryProvider).saveJob(job);
     _draftId = id;
@@ -279,7 +287,11 @@ class _AddJobScreenState extends ConsumerState<AddJobScreen> {
     setState(() => _loading = true);
     final subRepo = ref.read(subscriptionRepositoryProvider);
     try {
-      await _saveDraft();
+      // Save the latest form values directly (bypasses the draft-only guard
+      // in _saveDraft); publishJob below sets status/publishedAt/expiresAt.
+      _draftId = await ref
+          .read(jobRepositoryProvider)
+          .saveJob(_buildJob(user.uid, user.companyName));
       final id = _draftId!;
       final ok = await subRepo.deductPoint(user.uid, 'Published job: $_title');
       if (!ok) {
@@ -296,6 +308,7 @@ class _AddJobScreenState extends ConsumerState<AddJobScreen> {
         await subRepo.refundPoint(user.uid, 'Refund: failed publish $_title');
         rethrow;
       }
+      _published = true;
       if (mounted) context.pop();
     } catch (e) {
       if (mounted) {
