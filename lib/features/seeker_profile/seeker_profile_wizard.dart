@@ -9,8 +9,8 @@ import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:latlong2/latlong.dart';
 
-import '../../core/constants/lookups.dart';
 import '../../core/models/seeker_profile.dart';
+import '../../core/providers/lookup_providers.dart';
 import '../../core/providers/providers.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_theme.dart';
@@ -111,8 +111,14 @@ class _SeekerProfileWizardState extends ConsumerState<SeekerProfileWizard> {
     if (file == null) return;
     setState(() => _loading = true);
     try {
-      final url =
-          await ref.read(cloudinaryServiceProvider).uploadFile(File(file.path));
+      final cloudinary = ref.read(cloudinaryServiceProvider);
+      final String url;
+      if (file.path.isNotEmpty) {
+        url = await cloudinary.uploadFile(File(file.path));
+      } else {
+        final bytes = await file.readAsBytes();
+        url = await cloudinary.uploadBytes(bytes, file.name);
+      }
       setState(() => _photoUrl = url);
     } catch (e) {
       if (mounted) {
@@ -128,15 +134,27 @@ class _SeekerProfileWizardState extends ConsumerState<SeekerProfileWizard> {
     final result = await FilePicker.platform.pickFiles(
       type: FileType.custom,
       allowedExtensions: ['pdf', 'doc', 'docx'],
+      withData: true,
     );
-    if (result == null || result.files.single.path == null) return;
+    if (result == null || result.files.isEmpty) return;
+    final file = result.files.single;
+    if (file.path == null && file.bytes == null) return;
     setState(() => _loading = true);
     try {
-      final file = result.files.single;
-      final url = await ref.read(cloudinaryServiceProvider).uploadFile(
-            File(file.path!),
-            resourceType: 'raw',
-          );
+      final cloudinary = ref.read(cloudinaryServiceProvider);
+      final String url;
+      if (file.path != null) {
+        url = await cloudinary.uploadFile(
+          File(file.path!),
+          resourceType: 'raw',
+        );
+      } else {
+        url = await cloudinary.uploadBytes(
+          file.bytes!,
+          file.name,
+          resourceType: 'raw',
+        );
+      }
       setState(() {
         _resumeUrl = url;
         _resumeName = file.name;
@@ -359,7 +377,7 @@ class _SeekerProfileWizardState extends ConsumerState<SeekerProfileWizard> {
           hint: 'Select Gender',
           onTap: () => _pickSelect(
             title: l10n.gender,
-            options: Lookups.genders,
+            options: lookupList(ref, 'genders'),
             current: _gender,
             onPicked: (v) => setState(() => _gender = v),
           ),
@@ -371,7 +389,7 @@ class _SeekerProfileWizardState extends ConsumerState<SeekerProfileWizard> {
           hint: 'Select Marital status',
           onTap: () => _pickSelect(
             title: l10n.maritalStatus,
-            options: Lookups.maritalStatuses,
+            options: lookupList(ref, 'maritalStatuses'),
             current: _marital,
             onPicked: (v) => setState(() => _marital = v),
           ),
@@ -383,7 +401,7 @@ class _SeekerProfileWizardState extends ConsumerState<SeekerProfileWizard> {
           hint: 'Select Nationality',
           onTap: () => _pickSelect(
             title: l10n.nationality,
-            options: Lookups.nationalities,
+            options: lookupList(ref, 'nationalities'),
             current: _nationality,
             onPicked: (v) => setState(() => _nationality = v),
           ),
@@ -395,7 +413,7 @@ class _SeekerProfileWizardState extends ConsumerState<SeekerProfileWizard> {
           hint: 'Select Country of residence',
           onTap: () => _pickSelect(
             title: l10n.countryOfResidence,
-            options: Lookups.countries,
+            options: lookupList(ref, 'countries'),
             current: _country,
             onPicked: (v) => setState(() => _country = v),
           ),

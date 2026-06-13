@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../core/constants/lookups.dart';
 import '../../core/models/job_search_filters.dart';
+import '../../core/providers/lookup_providers.dart';
 import '../../core/providers/providers.dart';
 import '../../core/theme/app_colors.dart';
 import 'package:intl/intl.dart';
@@ -124,7 +124,7 @@ class _FilterScreenState extends ConsumerState<FilterScreen> {
     final picked = await DesignPickerSheet.showMulti<String>(
       context: context,
       title: AppLocalizations.of(context).languages,
-      options: Lookups.languages
+      options: lookupList(ref, 'languages')
           .map((l) => DesignPickerOption<String>(value: l, label: l))
           .toList(),
       selectedValues: _languages,
@@ -237,7 +237,7 @@ class _FilterScreenState extends ConsumerState<FilterScreen> {
                   hint: 'Any',
                   onTap: () => _pickSingle(
                     l10n.companyName,
-                    ['Any', ...Lookups.companySectors],
+                    ['Any', ...lookupList(ref, 'companySectors')],
                     _company.isEmpty ? 'Any' : _company,
                     (v) => setState(() => _company = v == 'Any' ? '' : (v ?? '')),
                   ),
@@ -249,7 +249,7 @@ class _FilterScreenState extends ConsumerState<FilterScreen> {
                   hint: 'Any',
                   onTap: () => _pickSingle(
                     'Experience level',
-                    ['Any', ...Lookups.experienceLevels],
+                    ['Any', ...lookupList(ref, 'experienceLevels')],
                     _experienceLevel ?? 'Any',
                     (v) => setState(
                       () => _experienceLevel = v == 'Any' ? null : v,
@@ -263,7 +263,7 @@ class _FilterScreenState extends ConsumerState<FilterScreen> {
                   hint: 'Any',
                   onTap: () => _pickSingle(
                     'Field of Education',
-                    ['Any', ...Lookups.educationFields],
+                    ['Any', ...lookupList(ref, 'educationFields')],
                     _fieldOfEducation ?? 'Any',
                     (v) => setState(
                       () => _fieldOfEducation = v == 'Any' ? null : v,
@@ -277,7 +277,7 @@ class _FilterScreenState extends ConsumerState<FilterScreen> {
                   hint: 'Any',
                   onTap: () => _pickSingle(
                     'Level of education',
-                    ['Any', ...Lookups.educationLevels],
+                    ['Any', ...lookupList(ref, 'educationLevels')],
                     _levelOfEducation ?? 'Any',
                     (v) => setState(
                       () => _levelOfEducation = v == 'Any' ? null : v,
@@ -291,7 +291,7 @@ class _FilterScreenState extends ConsumerState<FilterScreen> {
                   hint: 'Any',
                   onTap: () => _pickSingle(
                     l10n.jobType,
-                    ['Any', ...Lookups.employmentTypes],
+                    ['Any', ...lookupList(ref, 'employmentTypes')],
                     _jobType ?? 'Any',
                     (v) => setState(() => _jobType = v == 'Any' ? null : v),
                   ),
@@ -303,7 +303,7 @@ class _FilterScreenState extends ConsumerState<FilterScreen> {
                   hint: 'Any',
                   onTap: () => _pickSingle(
                     l10n.remote,
-                    ['Any', ...Lookups.remoteOptions],
+                    ['Any', ...lookupList(ref, 'remoteOptions')],
                     _remoteOption ?? 'Any',
                     (v) => setState(() => _remoteOption = v == 'Any' ? null : v),
                   ),
@@ -315,7 +315,7 @@ class _FilterScreenState extends ConsumerState<FilterScreen> {
                   hint: 'Any',
                   onTap: () => _pickSingle(
                     'Gender type',
-                    Lookups.genderTypes,
+                    lookupList(ref, 'genderTypes'),
                     _genderType ?? 'All',
                     (v) => setState(() => _genderType = v),
                   ),

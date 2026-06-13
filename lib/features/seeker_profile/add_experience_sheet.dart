@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
-import '../../core/constants/lookups.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/models/seeker_profile.dart';
+import '../../core/providers/lookup_providers.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/app_text_field.dart';
 import '../../core/widgets/design/design_widgets.dart';
 import '../../l10n/app_localizations.dart';
 import 'profile_sheet_common.dart';
 
-class AddExperienceSheet extends StatefulWidget {
+class AddExperienceSheet extends ConsumerStatefulWidget {
   const AddExperienceSheet({super.key, this.initial});
 
   final ExperienceEntry? initial;
@@ -24,10 +25,10 @@ class AddExperienceSheet extends StatefulWidget {
   }
 
   @override
-  State<AddExperienceSheet> createState() => _AddExperienceSheetState();
+  ConsumerState<AddExperienceSheet> createState() => _AddExperienceSheetState();
 }
 
-class _AddExperienceSheetState extends State<AddExperienceSheet> {
+class _AddExperienceSheetState extends ConsumerState<AddExperienceSheet> {
   String _jobTitle = '';
   String _employmentType = '';
   late final TextEditingController _company;
@@ -97,7 +98,7 @@ class _AddExperienceSheetState extends State<AddExperienceSheet> {
             final picked = await pickProfileOption(
               context,
               title: l10n.jobTitle,
-              options: Lookups.jobTitles,
+              options: lookupList(ref, 'jobTitles'),
               selected: _jobTitle.isEmpty ? null : _jobTitle,
             );
             if (picked != null) setState(() => _jobTitle = picked);
@@ -112,7 +113,7 @@ class _AddExperienceSheetState extends State<AddExperienceSheet> {
             final picked = await pickProfileOption(
               context,
               title: l10n.jobType,
-              options: Lookups.employmentTypes,
+              options: lookupList(ref, 'employmentTypes'),
               selected: _employmentType.isEmpty ? null : _employmentType,
             );
             if (picked != null) setState(() => _employmentType = picked);

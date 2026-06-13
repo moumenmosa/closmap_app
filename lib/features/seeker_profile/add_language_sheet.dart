@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
-import '../../core/constants/lookups.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/models/seeker_profile.dart';
+import '../../core/providers/lookup_providers.dart';
 import '../../core/widgets/design/design_widgets.dart';
 import '../../l10n/app_localizations.dart';
 import 'profile_sheet_common.dart';
 
-class AddLanguageSheet extends StatefulWidget {
+class AddLanguageSheet extends ConsumerStatefulWidget {
   const AddLanguageSheet({super.key, this.initial});
 
   final LanguageEntry? initial;
@@ -22,10 +23,10 @@ class AddLanguageSheet extends StatefulWidget {
   }
 
   @override
-  State<AddLanguageSheet> createState() => _AddLanguageSheetState();
+  ConsumerState<AddLanguageSheet> createState() => _AddLanguageSheetState();
 }
 
-class _AddLanguageSheetState extends State<AddLanguageSheet> {
+class _AddLanguageSheetState extends ConsumerState<AddLanguageSheet> {
   String _language = '';
   String _proficiency = '';
 
@@ -66,7 +67,7 @@ class _AddLanguageSheetState extends State<AddLanguageSheet> {
             final picked = await pickProfileOption(
               context,
               title: l10n.languages,
-              options: Lookups.languages,
+              options: lookupList(ref, 'languages'),
               selected: _language.isEmpty ? null : _language,
             );
             if (picked != null) setState(() => _language = picked);
@@ -81,7 +82,7 @@ class _AddLanguageSheetState extends State<AddLanguageSheet> {
             final picked = await pickProfileOption(
               context,
               title: l10n.proficiency,
-              options: Lookups.proficiencyLevels,
+              options: lookupList(ref, 'proficiencyLevels'),
               selected: _proficiency.isEmpty ? null : _proficiency,
             );
             if (picked != null) setState(() => _proficiency = picked);

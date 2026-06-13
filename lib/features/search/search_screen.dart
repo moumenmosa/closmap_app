@@ -4,9 +4,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:go_router/go_router.dart';
 import 'package:latlong2/latlong.dart';
-import '../../core/constants/lookups.dart';
 import '../../core/models/job_post.dart';
 import '../../core/models/job_search_filters.dart';
+import '../../core/providers/lookup_providers.dart';
 import '../../core/providers/providers.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/common_widgets.dart';
@@ -147,7 +147,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                 const SizedBox(height: 8),
                 Wrap(
                   spacing: 8,
-                  children: Lookups.searchSuggestions.map((s) {
+                  children: lookupList(ref, 'searchSuggestions').map((s) {
                     return ActionChip(
                       label: Text(s),
                       onPressed: () {

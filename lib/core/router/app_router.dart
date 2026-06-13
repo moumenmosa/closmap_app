@@ -16,6 +16,8 @@ import '../../features/employer_jobs/headhunting_screen.dart';
 import '../../features/employer_jobs/posted_jobs_screen.dart';
 import '../../features/employer_profile/employer_profile_screen.dart';
 import '../../features/admin/admin_home_screen.dart';
+import '../../features/admin/admin_lookup_editor_screen.dart';
+import '../../features/admin/admin_lookups_screen.dart';
 import '../../features/home/employer_home_screen.dart';
 import '../../features/home/seeker_home_screen.dart';
 import '../../features/jobs/company_profile_screen.dart';
@@ -97,6 +99,16 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (_, _) => const ForgotPasswordScreen(),
       ),
       GoRoute(path: '/admin/home', builder: (_, _) => const AdminHomeScreen()),
+      GoRoute(
+        path: '/admin/lookups',
+        builder: (_, _) => const AdminLookupsScreen(),
+      ),
+      GoRoute(
+        path: '/admin/lookups/:docId',
+        builder: (_, state) => AdminLookupEditorScreen(
+          docId: state.pathParameters['docId']!,
+        ),
+      ),
       GoRoute(path: '/seeker/home', builder: (_, _) => const SeekerHomeScreen()),
       GoRoute(
         path: '/employer/home',

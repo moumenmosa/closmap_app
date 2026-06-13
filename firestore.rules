@@ -22,6 +22,10 @@ service cloud.firestore {
       return signedIn() && userRole(request.auth.uid) == 'seeker';
     }
 
+    function isAdmin() {
+      return signedIn() && userRole(request.auth.uid) == 'admin';
+    }
+
     function validNotificationPrefs(prefs) {
       return prefs is map
         && prefs.keys().hasOnly(['pushType1', 'pushType2', 'pushType3', 'emailOnMatch'])
@@ -137,17 +141,17 @@ service cloud.firestore {
     // ---------- Plans & point packages (seeded, read-only) ----------
     match /plans/{planId} {
       allow read: if true;
-      allow write: if false;
+      allow write: if isAdmin();
     }
     match /pointPackages/{pkgId} {
       allow read: if true;
-      allow write: if false;
+      allow write: if isAdmin();
     }
 
     // ---------- Lookups (job titles, sectors, skills...) ----------
     match /lookups/{docId} {
       allow read: if true;
-      allow write: if false;
+      allow write: if isAdmin();
     }
 
     // ---------- Login attempt tracking ----------
@@ -158,7 +162,7 @@ service cloud.firestore {
     // ---------- Leaderboard (seeded, read-only) ----------
     match /leaderboard/{entryId} {
       allow read: if signedIn();
-      allow write: if false;
+      allow write: if isAdmin();
     }
   }
 }

@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:latlong2/latlong.dart';
 import '../../core/constants/lookups.dart';
 import '../../core/models/job_post.dart';
+import '../../core/providers/lookup_providers.dart';
 import '../../core/providers/providers.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_theme.dart';
@@ -375,7 +376,7 @@ class _AddJobScreenState extends ConsumerState<AddJobScreen> {
               value: _title,
               onTap: () => _pickSingle(
                 title: l10n.jobTitle,
-                options: Lookups.jobTitles,
+                options: lookupList(ref, 'jobTitles'),
                 current: _title,
                 onSelected: (v) => setState(() => _title = v),
               ),
@@ -386,7 +387,7 @@ class _AddJobScreenState extends ConsumerState<AddJobScreen> {
               value: _experienceLevel,
               onTap: () => _pickSingle(
                 title: 'Experience Level',
-                options: Lookups.experienceLevels,
+                options: lookupList(ref, 'experienceLevels'),
                 current: _experienceLevel,
                 onSelected: (v) => setState(() => _experienceLevel = v),
               ),
@@ -414,7 +415,7 @@ class _AddJobScreenState extends ConsumerState<AddJobScreen> {
               value: _jobType,
               onTap: () => _pickSingle(
                 title: l10n.jobType,
-                options: Lookups.employmentTypes,
+                options: lookupList(ref, 'employmentTypes'),
                 current: _jobType,
                 onSelected: (v) => setState(() => _jobType = v),
               ),
@@ -425,7 +426,7 @@ class _AddJobScreenState extends ConsumerState<AddJobScreen> {
               value: _remote,
               onTap: () => _pickSingle(
                 title: 'Remote',
-                options: Lookups.remoteOptions,
+                options: lookupList(ref, 'remoteOptions'),
                 current: _remote,
                 onSelected: (v) => setState(() => _remote = v),
               ),
@@ -436,7 +437,7 @@ class _AddJobScreenState extends ConsumerState<AddJobScreen> {
               value: _fieldOfEducation,
               onTap: () => _pickSingle(
                 title: 'Field of Education',
-                options: Lookups.educationFields,
+                options: lookupList(ref, 'educationFields'),
                 current: _fieldOfEducation,
                 onSelected: (v) => setState(() => _fieldOfEducation = v),
               ),
@@ -447,7 +448,7 @@ class _AddJobScreenState extends ConsumerState<AddJobScreen> {
               value: _levelOfEducation,
               onTap: () => _pickSingle(
                 title: 'Level of Education',
-                options: Lookups.educationLevels,
+                options: lookupList(ref, 'educationLevels'),
                 current: _levelOfEducation,
                 onSelected: (v) => setState(() => _levelOfEducation = v),
               ),
@@ -458,7 +459,7 @@ class _AddJobScreenState extends ConsumerState<AddJobScreen> {
               value: _languages.isEmpty ? null : _languages.join(', '),
               onTap: () => _pickMulti(
                 title: l10n.languages,
-                options: Lookups.languages,
+                options: lookupList(ref, 'languages'),
                 current: _languages,
                 onSelected: (v) => setState(() => _languages = v),
               ),
@@ -475,7 +476,7 @@ class _AddJobScreenState extends ConsumerState<AddJobScreen> {
               value: _genderType,
               onTap: () => _pickSingle(
                 title: 'Gender Type',
-                options: Lookups.genderTypes,
+                options: lookupList(ref, 'genderTypes'),
                 current: _genderType,
                 onSelected: (v) => setState(() => _genderType = v),
               ),

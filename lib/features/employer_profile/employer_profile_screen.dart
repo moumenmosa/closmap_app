@@ -6,8 +6,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:latlong2/latlong.dart';
-import '../../core/constants/lookups.dart';
 import '../../core/models/employer_profile.dart';
+import '../../core/providers/lookup_providers.dart';
 import '../../core/providers/providers.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/utils/geo_utils.dart';
@@ -102,10 +102,21 @@ class _EmployerProfileScreenState extends ConsumerState<EmployerProfileScreen> {
     if (file == null) return;
     setState(() => _loading = true);
     try {
-      final url = await ref
-          .read(cloudinaryServiceProvider)
-          .uploadFile(File(file.path));
+      final cloudinary = ref.read(cloudinaryServiceProvider);
+      final String url;
+      if (file.path.isNotEmpty) {
+        url = await cloudinary.uploadFile(File(file.path));
+      } else {
+        final bytes = await file.readAsBytes();
+        url = await cloudinary.uploadBytes(bytes, file.name);
+      }
       setState(() => _logoUrl = url);
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('$e')),
+        );
+      }
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -115,15 +126,34 @@ class _EmployerProfileScreenState extends ConsumerState<EmployerProfileScreen> {
     final result = await FilePicker.platform.pickFiles(
       type: FileType.custom,
       allowedExtensions: ['pdf', 'jpg', 'png'],
+      withData: true,
     );
-    if (result?.files.single.path == null) return;
+    if (result == null || result.files.isEmpty) return;
+    final file = result.files.single;
+    if (file.path == null && file.bytes == null) return;
     setState(() => _loading = true);
     try {
-      final url = await ref.read(cloudinaryServiceProvider).uploadFile(
-            File(result!.files.single.path!),
-            resourceType: 'raw',
-          );
+      final cloudinary = ref.read(cloudinaryServiceProvider);
+      final String url;
+      if (file.path != null) {
+        url = await cloudinary.uploadFile(
+          File(file.path!),
+          resourceType: 'raw',
+        );
+      } else {
+        url = await cloudinary.uploadBytes(
+          file.bytes!,
+          file.name,
+          resourceType: 'raw',
+        );
+      }
       setState(() => _certificateUrl = url);
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('$e')),
+        );
+      }
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -282,7 +312,7 @@ class _EmployerProfileScreenState extends ConsumerState<EmployerProfileScreen> {
           label: l10n.companySector,
           value: _sector,
           hint: l10n.companySector,
-          onTap: () => _pick(l10n.companySector, Lookups.companySectors, (v) {
+          onTap: () => _pick(l10n.companySector, lookupList(ref, 'companySectors'), (v) {
             setState(() => _sector = v);
           }),
         ),
@@ -293,7 +323,7 @@ class _EmployerProfileScreenState extends ConsumerState<EmployerProfileScreen> {
           label: l10n.companySize,
           value: _size,
           hint: l10n.companySize,
-          onTap: () => _pick(l10n.companySize, Lookups.companySizes, (v) {
+          onTap: () => _pick(l10n.companySize, lookupList(ref, 'companySizes'), (v) {
             setState(() => _size = v);
           }),
         ),
@@ -302,7 +332,7 @@ class _EmployerProfileScreenState extends ConsumerState<EmployerProfileScreen> {
           label: l10n.nationality,
           value: _nationality,
           hint: l10n.nationality,
-          onTap: () => _pick(l10n.nationality, Lookups.nationalities, (v) {
+          onTap: () => _pick(l10n.nationality, lookupList(ref, 'nationalities'), (v) {
             setState(() => _nationality = v);
           }),
         ),

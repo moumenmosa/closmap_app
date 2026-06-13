@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
-import '../../core/constants/lookups.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/models/seeker_profile.dart';
+import '../../core/providers/lookup_providers.dart';
 import '../../core/widgets/design/design_widgets.dart';
 import '../../l10n/app_localizations.dart';
 import 'profile_sheet_common.dart';
 
-class AddEducationSheet extends StatefulWidget {
+class AddEducationSheet extends ConsumerStatefulWidget {
   const AddEducationSheet({super.key, this.initial});
 
   final EducationEntry? initial;
@@ -22,10 +23,10 @@ class AddEducationSheet extends StatefulWidget {
   }
 
   @override
-  State<AddEducationSheet> createState() => _AddEducationSheetState();
+  ConsumerState<AddEducationSheet> createState() => _AddEducationSheetState();
 }
 
-class _AddEducationSheetState extends State<AddEducationSheet> {
+class _AddEducationSheetState extends ConsumerState<AddEducationSheet> {
   String _level = '';
   String _field = '';
   DateTime? _startDate;
@@ -84,7 +85,7 @@ class _AddEducationSheetState extends State<AddEducationSheet> {
             final picked = await pickProfileOption(
               context,
               title: 'Level of education',
-              options: Lookups.educationLevels,
+              options: lookupList(ref, 'educationLevels'),
               selected: _level.isEmpty ? null : _level,
             );
             if (picked != null) setState(() => _level = picked);
@@ -99,7 +100,7 @@ class _AddEducationSheetState extends State<AddEducationSheet> {
             final picked = await pickProfileOption(
               context,
               title: 'Field of education',
-              options: Lookups.educationFields,
+              options: lookupList(ref, 'educationFields'),
               selected: _field.isEmpty ? null : _field,
             );
             if (picked != null) setState(() => _field = picked);
