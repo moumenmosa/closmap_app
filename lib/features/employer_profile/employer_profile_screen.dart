@@ -13,6 +13,7 @@ import '../../core/theme/app_colors.dart';
 import '../../core/utils/geo_utils.dart';
 import '../../core/widgets/app_text_field.dart';
 import '../../core/widgets/design/design_widgets.dart';
+import '../../core/widgets/profile_image.dart';
 import '../../l10n/app_localizations.dart';
 
 class EmployerProfileScreen extends ConsumerStatefulWidget {
@@ -98,7 +99,12 @@ class _EmployerProfileScreenState extends ConsumerState<EmployerProfileScreen> {
   }
 
   Future<void> _uploadLogo() async {
-    final file = await ImagePicker().pickImage(source: ImageSource.gallery);
+    final file = await ImagePicker().pickImage(
+      source: ImageSource.gallery,
+      maxWidth: 1024,
+      maxHeight: 1024,
+      imageQuality: 80,
+    );
     if (file == null) return;
     setState(() => _loading = true);
     try {
@@ -280,8 +286,7 @@ class _EmployerProfileScreenState extends ConsumerState<EmployerProfileScreen> {
             child: CircleAvatar(
               radius: 64,
               backgroundColor: AppColors.surfaceMuted,
-              backgroundImage:
-                  _logoUrl.isNotEmpty ? NetworkImage(_logoUrl) : null,
+              backgroundImage: ProfileImage.provider(_logoUrl),
               child: _logoUrl.isEmpty
                   ? const Icon(Icons.business, size: 48)
                   : null,

@@ -10,8 +10,9 @@ import '../repositories/spot_repository.dart';
 import '../repositories/subscription_repository.dart';
 import '../repositories/user_repository.dart';
 import '../services/auth_service.dart';
-import '../services/cloudinary_service.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import '../services/matching_service.dart';
+import '../services/cloudinary_service.dart';
 import '../services/notification_service.dart';
 import '../services/seed_service.dart';
 
@@ -54,7 +55,10 @@ final spotRepositoryProvider = Provider<SpotRepository>((ref) {
 });
 
 final cloudinaryServiceProvider =
-    Provider<CloudinaryService>((ref) => CloudinaryService());
+    Provider<CloudinaryService>((ref) => CloudinaryService(
+          FirebaseStorage.instance,
+          ref.watch(authProvider),
+        ));
 
 final notificationServiceProvider = Provider<NotificationService>((ref) {
   return NotificationService(ref.watch(firestoreProvider));

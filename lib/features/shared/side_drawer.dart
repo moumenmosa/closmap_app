@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../core/models/app_user.dart';
 import '../../core/providers/providers.dart';
+import '../../core/widgets/profile_image.dart';
 import '../../l10n/app_localizations.dart';
 
 class SideDrawer extends ConsumerWidget {
@@ -21,9 +22,7 @@ class SideDrawer extends ConsumerWidget {
             UserAccountsDrawerHeader(
               accountName: Text(user.displayName),
               accountEmail: Text(user.email),
-              currentAccountPicture: const CircleAvatar(
-                child: Icon(Icons.person),
-              ),
+              currentAccountPicture: _DrawerAvatar(user: user, ref: ref),
             ),
             if (!user.isAdmin)
               ListTile(
@@ -42,7 +41,7 @@ class SideDrawer extends ConsumerWidget {
                 title: Text(l10n.applied),
                 onTap: () {
                   Navigator.pop(context);
-                  context.push('/applications');
+                  context.push('/applications?tab=applied');
                 },
               ),
             if (user.role == UserRole.seeker)
@@ -125,5 +124,42 @@ class SideDrawer extends ConsumerWidget {
         ),
       ),
     );
+  }
+}
+
+class _DrawerAvatar extends StatelessWidget {
+  const _DrawerAvatar({required this.user, required this.ref});
+
+  final AppUser user;
+  final WidgetRef ref;
+
+  @override
+  Widget build(BuildContext context) {
+    if (user.role == UserRole.seeker) {
+      return StreamBuilder(
+        stream: ref.watch(userRepositoryProvider).watchSeekerProfile(user.uid),
+        builder: (context, snap) {
+          final photoUrl = snap.data?.photoUrl ?? '';
+          return CircleAvatar(
+            backgroundImage: ProfileImage.provider(photoUrl),
+            child: photoUrl.isEmpty ? const Icon(Icons.person) : null,
+          );
+        },
+      );
+    }
+    if (user.role == UserRole.employer) {
+      return StreamBuilder(
+        stream:
+            ref.watch(userRepositoryProvider).watchEmployerProfile(user.uid),
+        builder: (context, snap) {
+          final logoUrl = snap.data?.logoUrl ?? '';
+          return CircleAvatar(
+            backgroundImage: ProfileImage.provider(logoUrl),
+            child: logoUrl.isEmpty ? const Icon(Icons.business) : null,
+          );
+        },
+      );
+    }
+    return const CircleAvatar(child: Icon(Icons.person));
   }
 }

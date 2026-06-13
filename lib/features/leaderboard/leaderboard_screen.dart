@@ -1,4 +1,3 @@
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -8,6 +7,7 @@ import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/widgets/common_widgets.dart';
 import '../../core/widgets/design/design_widgets.dart';
+import '../../core/widgets/profile_image.dart';
 import '../../l10n/app_localizations.dart';
 
 class LeaderboardScreen extends ConsumerWidget {
@@ -70,8 +70,7 @@ class LeaderboardScreen extends ConsumerWidget {
                     ),
                     const SizedBox(width: 6),
                     Tooltip(
-                      message:
-                          'Ranked by active jobs, applicants, and hires.',
+                      message: 'Ranked by active jobs and applicant counts.',
                       child: const Icon(
                         Icons.info_outline,
                         size: 18,
@@ -82,7 +81,7 @@ class LeaderboardScreen extends ConsumerWidget {
                 ),
                 const SizedBox(height: 8),
                 const Text(
-                  'Score = active jobs × 10 + applicants × 5 + hires × 20',
+                  'Score = active jobs × 10 + applicants × 5',
                   style: TextStyle(
                     color: AppColors.textSecondary,
                     fontSize: 12,
@@ -128,9 +127,7 @@ class _LeaderboardTile extends StatelessWidget {
         leading: CircleAvatar(
           radius: 24,
           backgroundColor: AppColors.surfaceMuted,
-          backgroundImage: entry.logoUrl.isNotEmpty
-              ? CachedNetworkImageProvider(entry.logoUrl)
-              : null,
+          backgroundImage: ProfileImage.provider(entry.logoUrl),
           child: entry.logoUrl.isEmpty
               ? const Icon(Icons.business, color: AppColors.textSecondary)
               : null,

@@ -1,10 +1,10 @@
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/providers/providers.dart';
 import '../../core/widgets/common_widgets.dart';
 import '../../core/widgets/design/design_widgets.dart';
+import '../../core/widgets/profile_image.dart';
 import '../../l10n/app_localizations.dart';
 
 class CompanyProfileScreen extends ConsumerWidget {
@@ -36,9 +36,7 @@ class CompanyProfileScreen extends ConsumerWidget {
                       child: CircleAvatar(
                         radius: 48,
                         backgroundColor: AppColors.surface,
-                        backgroundImage: p.logoUrl.isNotEmpty
-                            ? CachedNetworkImageProvider(p.logoUrl)
-                            : null,
+                        backgroundImage: ProfileImage.provider(p.logoUrl),
                         child: p.logoUrl.isEmpty
                             ? const Icon(Icons.business, size: 40)
                             : null,

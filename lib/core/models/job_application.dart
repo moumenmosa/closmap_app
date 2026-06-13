@@ -17,6 +17,7 @@ class JobApplication {
   final String jobTitle;
   final String companyName;
   final String seekerName;
+  final String seekerPhotoUrl;
   final ApplicationStatus status;
   final DateTime appliedAt;
   final bool removedBySeeker;
@@ -30,6 +31,7 @@ class JobApplication {
     this.jobTitle = '',
     this.companyName = '',
     this.seekerName = '',
+    this.seekerPhotoUrl = '',
     this.status = ApplicationStatus.pending,
     required this.appliedAt,
     this.removedBySeeker = false,
@@ -54,6 +56,7 @@ class JobApplication {
       jobTitle: d['jobTitle'] ?? '',
       companyName: d['companyName'] ?? '',
       seekerName: d['seekerName'] ?? '',
+      seekerPhotoUrl: d['seekerPhotoUrl'] ?? '',
       status: statusFromString(d['status'] as String?),
       appliedAt: (d['appliedAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
       removedBySeeker: d['removedBySeeker'] ?? false,
@@ -68,6 +71,7 @@ class JobApplication {
         'jobTitle': jobTitle,
         'companyName': companyName,
         'seekerName': seekerName,
+        'seekerPhotoUrl': seekerPhotoUrl,
         'status': status.name,
         'appliedAt': Timestamp.fromDate(appliedAt),
         'removedBySeeker': removedBySeeker,

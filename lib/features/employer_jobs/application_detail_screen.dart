@@ -7,6 +7,7 @@ import '../../core/providers/providers.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/app_button.dart';
 import '../../core/widgets/common_widgets.dart';
+import '../../core/widgets/profile_image.dart';
 import '../../l10n/app_localizations.dart';
 import 'seeker_preview_screen.dart';
 
@@ -77,7 +78,7 @@ class _ApplicationDetailScreenState extends ConsumerState<ApplicationDetailScree
             userId: app.seekerId,
             subject: l10n.applicants,
             body: '${app.jobTitle}: ${_statusLabel(status, l10n)}',
-            route: '/applications',
+            route: '/applications?tab=applied',
           );
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -195,6 +196,14 @@ class _ApplicationDetailScreenState extends ConsumerState<ApplicationDetailScree
                 children: [
                   ListTile(
                     contentPadding: EdgeInsets.zero,
+                    leading: CircleAvatar(
+                      backgroundColor: Colors.grey.shade200,
+                      backgroundImage:
+                          ProfileImage.provider(app.seekerPhotoUrl),
+                      child: app.seekerPhotoUrl.isEmpty
+                          ? const Icon(Icons.person_outline)
+                          : null,
+                    ),
                     title: Text(
                       app.seekerName,
                       style: const TextStyle(

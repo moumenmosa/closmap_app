@@ -5,6 +5,7 @@ import '../../core/models/view_request.dart';
 import '../../core/providers/providers.dart';
 import '../../core/widgets/app_button.dart';
 import '../../core/widgets/common_widgets.dart';
+import '../../core/widgets/profile_image.dart';
 import '../../l10n/app_localizations.dart';
 
 class ViewRequestDetailScreen extends ConsumerStatefulWidget {
@@ -56,7 +57,9 @@ class _ViewRequestDetailScreenState extends ConsumerState<ViewRequestDetailScree
               userId: r.employerId,
               subject: l10n.contactUnlocked,
               body: l10n.contactUnlocked,
-              route: '/employer/headhunting',
+              route: r.jobId.isEmpty
+                  ? '/employer/headhunting'
+                  : '/employer/job/${r.jobId}/applicants',
             );
       }
       await _load();
@@ -91,6 +94,17 @@ class _ViewRequestDetailScreenState extends ConsumerState<ViewRequestDetailScree
       body: ListView(
         padding: const EdgeInsets.all(20),
         children: [
+          Center(
+            child: CircleAvatar(
+              radius: 40,
+              backgroundColor: Colors.grey.shade200,
+              backgroundImage: ProfileImage.provider(r.companyLogoUrl),
+              child: r.companyLogoUrl.isEmpty
+                  ? const Icon(Icons.business_outlined, size: 36)
+                  : null,
+            ),
+          ),
+          const SizedBox(height: 16),
           Text(
             r.companyName,
             style: Theme.of(context).textTheme.headlineSmall?.copyWith(

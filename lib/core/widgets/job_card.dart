@@ -1,10 +1,10 @@
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import '../models/job_post.dart';
 import '../theme/app_colors.dart';
 import '../utils/formatters.dart';
 import '../utils/geo_utils.dart';
 import 'common_widgets.dart';
+import 'profile_image.dart';
 
 class JobCard extends StatelessWidget {
   const JobCard({
@@ -16,6 +16,7 @@ class JobCard extends StatelessWidget {
     this.userLat,
     this.userLng,
     this.trailing,
+    this.logoUrlFallback,
   });
 
   final JobPost job;
@@ -25,6 +26,12 @@ class JobCard extends StatelessWidget {
   final double? userLat;
   final double? userLng;
   final Widget? trailing;
+  final String? logoUrlFallback;
+
+  String get _logoUrl {
+    if (job.companyLogoUrl.isNotEmpty) return job.companyLogoUrl;
+    return logoUrlFallback ?? '';
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -116,7 +123,7 @@ class JobCard extends StatelessWidget {
   }
 
   Widget _logo() {
-    if (job.companyLogoUrl.isEmpty) {
+    if (_logoUrl.isEmpty) {
       return CircleAvatar(
         backgroundColor: AppColors.surfaceMuted,
         child: Text(job.companyName.isNotEmpty ? job.companyName[0] : '?'),
@@ -124,12 +131,15 @@ class JobCard extends StatelessWidget {
     }
     return ClipRRect(
       borderRadius: BorderRadius.circular(24),
-      child: CachedNetworkImage(
-        imageUrl: job.companyLogoUrl,
+      child: ProfileImage(
+        url: _logoUrl,
         width: 48,
         height: 48,
         fit: BoxFit.cover,
-        errorWidget: (_, __, ___) => const Icon(Icons.business),
+        errorWidget: CircleAvatar(
+          backgroundColor: AppColors.surfaceMuted,
+          child: Text(job.companyName.isNotEmpty ? job.companyName[0] : '?'),
+        ),
       ),
     );
   }

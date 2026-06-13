@@ -29,6 +29,7 @@ import '../../features/settings/settings_screen.dart';
 import '../../features/search/filter_screen.dart';
 import '../../features/search/search_screen.dart';
 import '../models/job_search_filters.dart';
+import '../models/job_post.dart';
 import '../../features/seeker_profile/seeker_profile_screen.dart';
 import '../../core/models/seeker_profile.dart';
 import '../../features/seeker_profile/seeker_profile_wizard.dart';
@@ -116,10 +117,14 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: '/seeker/profile-wizard',
-        builder: (_, state) => SeekerProfileWizard(
-          initial: state.extra as SeekerProfile?,
-          enforceDailyLimit: state.uri.queryParameters['edit'] == '1',
-        ),
+        builder: (_, state) {
+          final step = int.tryParse(state.uri.queryParameters['step'] ?? '') ?? 0;
+          return SeekerProfileWizard(
+            initial: state.extra as SeekerProfile?,
+            enforceDailyLimit: state.uri.queryParameters['edit'] == '1',
+            initialStep: step,
+          );
+        },
       ),
       GoRoute(
         path: '/seeker/profile',
@@ -131,7 +136,10 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: '/job/:id',
-        builder: (_, state) => JobDetailsScreen(jobId: state.pathParameters['id']!),
+        builder: (_, state) => JobDetailsScreen(
+          jobId: state.pathParameters['id']!,
+          initialJob: state.extra as JobPost?,
+        ),
       ),
       GoRoute(
         path: '/company/:id',
@@ -140,7 +148,16 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: '/applications',
-        builder: (_, _) => const ApplicationsScreen(),
+        builder: (_, state) {
+          final tab = state.uri.queryParameters['tab'];
+          final index = switch (tab) {
+            'saved' => 1,
+            'matched' => 2,
+            'requests' => 3,
+            _ => 0,
+          };
+          return ApplicationsScreen(initialTab: index);
+        },
       ),
       GoRoute(path: '/search', builder: (_, _) => const SearchScreen()),
       GoRoute(

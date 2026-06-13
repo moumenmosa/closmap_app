@@ -1,4 +1,5 @@
-import 'package:cached_network_image/cached_network_image.dart';
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:geolocator/geolocator.dart';
@@ -15,12 +16,18 @@ import '../../core/utils/subscription_utils.dart';
 import '../../core/widgets/apply_success_dialog.dart';
 import '../../core/widgets/common_widgets.dart';
 import '../../core/widgets/design/design_widgets.dart';
+import '../../core/widgets/profile_image.dart';
 import '../../l10n/app_localizations.dart';
 
 class JobDetailsScreen extends ConsumerStatefulWidget {
-  const JobDetailsScreen({super.key, required this.jobId});
+  const JobDetailsScreen({
+    super.key,
+    required this.jobId,
+    this.initialJob,
+  });
 
   final String jobId;
+  final JobPost? initialJob;
 
   @override
   ConsumerState<JobDetailsScreen> createState() => _JobDetailsScreenState();
@@ -43,41 +50,88 @@ class _JobDetailsScreenState extends ConsumerState<JobDetailsScreen> {
   }
 
   Future<void> _load() async {
-    final job = await ref.read(jobRepositoryProvider).getJob(widget.jobId);
+    JobPost? job = widget.initialJob;
+    if (job == null || job.id != widget.jobId) {
+      try {
+        job = await ref.read(jobRepositoryProvider).getJob(widget.jobId);
+      } catch (_) {
+        job = null;
+      }
+    }
+
     if (job == null) {
       if (mounted) setState(() => _loadComplete = true);
       return;
     }
 
-    final employer =
-        await ref.read(userRepositoryProvider).getEmployerProfile(job.employerId);
-
-    final uid = ref.read(authStateProvider).valueOrNull?.uid;
-    var applied = false;
-    var saved = false;
-    if (uid != null) {
-      applied = await ref
-          .read(applicationRepositoryProvider)
-          .hasApplied(uid, widget.jobId);
-      saved = await ref
-          .read(applicationRepositoryProvider)
-          .isSaved(uid, widget.jobId);
-    }
-
-    try {
-      final pos = await Geolocator.getCurrentPosition();
-      _userLat = pos.latitude;
-      _userLng = pos.longitude;
-    } catch (_) {}
-
     if (mounted) {
       setState(() {
         _job = job;
+        _loadComplete = true;
+      });
+    }
+
+    unawaited(_loadExtras(job));
+  }
+
+  Future<void> _loadExtras(JobPost job) async {
+    EmployerProfile? employer;
+    var applied = false;
+    var saved = false;
+
+    try {
+      employer = await ref
+          .read(userRepositoryProvider)
+          .getEmployerProfile(job.employerId);
+    } catch (_) {}
+
+    final uid = ref.read(authStateProvider).valueOrNull?.uid;
+    if (uid != null) {
+      try {
+        applied = await ref
+            .read(applicationRepositoryProvider)
+            .hasApplied(uid, widget.jobId);
+      } catch (_) {}
+      try {
+        saved = await ref
+            .read(applicationRepositoryProvider)
+            .isSaved(uid, widget.jobId);
+      } catch (_) {}
+    }
+
+    if (mounted) {
+      setState(() {
         _employer = employer;
         _applied = applied;
         _saved = saved;
-        _loadComplete = true;
       });
+    }
+
+    unawaited(_loadUserLocation());
+  }
+
+  Future<void> _loadUserLocation() async {
+    try {
+      final pos = await Geolocator.getCurrentPosition(
+        locationSettings: const LocationSettings(
+          timeLimit: Duration(seconds: 5),
+        ),
+      ).timeout(const Duration(seconds: 5));
+      if (!mounted) return;
+      setState(() {
+        _userLat = pos.latitude;
+        _userLng = pos.longitude;
+      });
+    } catch (_) {
+      try {
+        final last = await Geolocator.getLastKnownPosition();
+        if (last != null && mounted) {
+          setState(() {
+            _userLat = last.latitude;
+            _userLng = last.longitude;
+          });
+        }
+      } catch (_) {}
     }
   }
 
@@ -124,7 +178,11 @@ class _JobDetailsScreenState extends ConsumerState<JobDetailsScreen> {
     final profile = await ref.read(userRepositoryProvider).getSeekerProfile(user.uid);
     Position? pos;
     try {
-      pos = await Geolocator.getCurrentPosition();
+      pos = await Geolocator.getCurrentPosition(
+        locationSettings: const LocationSettings(
+          timeLimit: Duration(seconds: 5),
+        ),
+      ).timeout(const Duration(seconds: 5));
     } catch (_) {}
 
     if (pos != null &&
@@ -185,6 +243,7 @@ class _JobDetailsScreenState extends ConsumerState<JobDetailsScreen> {
               jobTitle: job.title,
               companyName: job.companyName,
               seekerName: user.displayName,
+              seekerPhotoUrl: profile?.photoUrl ?? '',
             );
         await ref.read(jobRepositoryProvider).incrementApplicants(job.id);
         await ref.read(notificationServiceProvider).send(
@@ -309,7 +368,9 @@ class _JobDetailsScreenState extends ConsumerState<JobDetailsScreen> {
                       left: 20,
                       bottom: -28,
                       child: _CompanyLogo(
-                        logoUrl: job.companyLogoUrl,
+                        logoUrl: job.companyLogoUrl.isNotEmpty
+                            ? job.companyLogoUrl
+                            : (_employer?.logoUrl ?? ''),
                         companyName: job.companyName,
                       ),
                     ),
@@ -699,10 +760,12 @@ class _CompanyLogo extends StatelessWidget {
       ),
       child: ClipOval(
         child: logoUrl.isNotEmpty
-            ? CachedNetworkImage(
-                imageUrl: logoUrl,
+            ? ProfileImage(
+                url: logoUrl,
+                width: 64,
+                height: 64,
                 fit: BoxFit.cover,
-                errorWidget: (_, _, _) => _fallback(),
+                errorWidget: _fallback(),
               )
             : _fallback(),
       ),

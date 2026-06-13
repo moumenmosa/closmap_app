@@ -90,8 +90,12 @@ service cloud.firestore {
       );
       allow create: if isSeeker() && request.resource.data.seekerId == request.auth.uid;
       allow update: if signedIn() && (
-        resource.data.seekerId == request.auth.uid
-        || resource.data.employerId == request.auth.uid
+        (resource.data.seekerId == request.auth.uid
+          && request.resource.data.diff(resource.data).affectedKeys()
+               .hasOnly(['removedBySeeker']))
+        || (resource.data.employerId == request.auth.uid
+          && request.resource.data.diff(resource.data).affectedKeys()
+               .hasOnly(['status', 'interviewNote']))
       );
       allow delete: if signedIn() && resource.data.seekerId == request.auth.uid;
     }

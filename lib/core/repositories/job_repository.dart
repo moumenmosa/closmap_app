@@ -137,9 +137,13 @@ class JobRepository {
   }
 
   Future<JobPost?> getJob(String id) async {
-    final doc = await _jobs.doc(id).get();
-    if (!doc.exists) return null;
-    return JobPost.fromDoc(doc);
+    try {
+      final doc = await _jobs.doc(id).get();
+      if (!doc.exists) return null;
+      return JobPost.fromDoc(doc);
+    } catch (_) {
+      return null;
+    }
   }
 
   Stream<List<JobPost>> watchEmployerJobs(String employerId) {

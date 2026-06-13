@@ -8,6 +8,7 @@ import '../../core/models/seeker_profile.dart';
 import '../../core/providers/providers.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/home_map_chrome.dart';
+import '../../core/widgets/profile_image.dart';
 import '../../l10n/app_localizations.dart';
 import '../employer_jobs/seeker_preview_screen.dart';
 import '../shared/side_drawer.dart';
@@ -193,7 +194,13 @@ class _EmployerHomeScreenState extends ConsumerState<EmployerHomeScreen> {
       itemBuilder: (_, i) {
         final s = seekers[i];
         return ListTile(
-          leading: const Icon(Icons.person_outline),
+          leading: CircleAvatar(
+            backgroundColor: Colors.grey.shade200,
+            backgroundImage: ProfileImage.provider(s.photoUrl),
+            child: s.photoUrl.isEmpty
+                ? const Icon(Icons.person_outline)
+                : null,
+          ),
           title: Text(s.latestJobTitle),
           subtitle: Text(s.city),
           onTap: () => Navigator.of(context).push(

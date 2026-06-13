@@ -30,6 +30,7 @@ class ApplicationRepository {
     required String jobTitle,
     required String companyName,
     required String seekerName,
+    String seekerPhotoUrl = '',
   }) async {
     final docRef = _db.collection('applications').doc('${seekerId}_$jobId');
     final created = await _db.runTransaction<bool>((tx) async {
@@ -42,6 +43,7 @@ class ApplicationRepository {
         'jobTitle': jobTitle,
         'companyName': companyName,
         'seekerName': seekerName,
+        'seekerPhotoUrl': seekerPhotoUrl,
         'status': 'pending',
         'appliedAt': FieldValue.serverTimestamp(),
         'removedBySeeker': false,
@@ -64,13 +66,20 @@ class ApplicationRepository {
             .toList());
   }
 
-  Stream<List<JobApplication>> watchJobApplications(String jobId) {
+  Stream<List<JobApplication>> watchJobApplications(
+    String jobId,
+    String employerId,
+  ) {
     return _db
         .collection('applications')
+        .where('employerId', isEqualTo: employerId)
         .where('jobId', isEqualTo: jobId)
         .orderBy('appliedAt', descending: true)
         .snapshots()
-        .map((s) => s.docs.map(JobApplication.fromDoc).toList());
+        .map((s) => s.docs
+            .map(JobApplication.fromDoc)
+            .where((a) => !a.removedBySeeker)
+            .toList());
   }
 
   Future<void> updateApplicationStatus(

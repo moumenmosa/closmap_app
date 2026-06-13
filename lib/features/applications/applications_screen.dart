@@ -9,10 +9,13 @@ import '../../core/models/view_request.dart';
 import '../../core/providers/providers.dart';
 import '../../core/widgets/common_widgets.dart';
 import '../../core/widgets/job_card.dart';
+import '../../core/widgets/profile_image.dart';
 import '../../l10n/app_localizations.dart';
 
 class ApplicationsScreen extends ConsumerStatefulWidget {
-  const ApplicationsScreen({super.key});
+  const ApplicationsScreen({super.key, this.initialTab = 0});
+
+  final int initialTab;
 
   @override
   ConsumerState<ApplicationsScreen> createState() => _ApplicationsScreenState();
@@ -25,7 +28,11 @@ class _ApplicationsScreenState extends ConsumerState<ApplicationsScreen>
   @override
   void initState() {
     super.initState();
-    _tabs = TabController(length: 4, vsync: this);
+    _tabs = TabController(
+      length: 4,
+      vsync: this,
+      initialIndex: widget.initialTab.clamp(0, 3),
+    );
   }
 
   @override
@@ -217,7 +224,7 @@ class _ApplicationsBody extends ConsumerWidget {
                 jobId: app.jobId,
                 builder: (job) => JobCard(
                   job: job,
-                  onTap: () => context.push('/job/${job.id}'),
+                  onTap: () => context.push('/job/${job.id}', extra: job),
                   trailing: StatusChip(status: _applicationStatusLabel(app.status)),
                 ),
               ),
@@ -263,7 +270,7 @@ class _ApplicationsBody extends ConsumerWidget {
                 builder: (job) => JobCard(
                   job: job,
                   bookmarked: true,
-                  onTap: () => context.push('/job/${job.id}'),
+                  onTap: () => context.push('/job/${job.id}', extra: job),
                 ),
               ),
             );
@@ -294,7 +301,7 @@ class _ApplicationsBody extends ConsumerWidget {
               jobId: m.jobId,
               builder: (job) => JobCard(
                 job: job,
-                onTap: () => context.push('/job/${job.id}'),
+                onTap: () => context.push('/job/${job.id}', extra: job),
                 trailing: Chip(label: Text('${(m.score * 100).toInt()}%')),
               ),
             );
@@ -322,14 +329,50 @@ class _ApplicationsBody extends ConsumerWidget {
             final r = reqs[i];
             return Card(
               margin: const EdgeInsets.all(12),
-              child: ListTile(
-                title: Text(r.companyName,
-                    style: const TextStyle(fontWeight: FontWeight.bold)),
-                subtitle: Text(
-                  r.jobTitle.isNotEmpty ? r.jobTitle : l10n.headhunting,
+              child: Padding(
+                padding: const EdgeInsets.all(8),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    ListTile(
+                      contentPadding: EdgeInsets.zero,
+                      leading: CircleAvatar(
+                        backgroundColor: Colors.grey.shade200,
+                        backgroundImage:
+                            ProfileImage.provider(r.companyLogoUrl),
+                        child: r.companyLogoUrl.isEmpty
+                            ? const Icon(Icons.business_outlined)
+                            : null,
+                      ),
+                      title: Text(
+                        r.companyName,
+                        style: const TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                      subtitle: Text(
+                        r.jobTitle.isNotEmpty ? r.jobTitle : l10n.headhunting,
+                      ),
+                      trailing: IconButton(
+                        icon: const Icon(Icons.chevron_right),
+                        onPressed: () => context.push('/requests/${r.id}'),
+                      ),
+                      onTap: () => context.push('/requests/${r.id}'),
+                    ),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        TextButton(
+                          onPressed: () => onRespond(r, false, l10n),
+                          child: Text(l10n.reject),
+                        ),
+                        const SizedBox(width: 8),
+                        FilledButton(
+                          onPressed: () => onRespond(r, true, l10n),
+                          child: Text(l10n.approve),
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
-                trailing: const Icon(Icons.chevron_right),
-                onTap: () => context.push('/requests/${r.id}'),
               ),
             );
           },

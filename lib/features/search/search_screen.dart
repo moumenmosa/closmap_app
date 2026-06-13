@@ -198,7 +198,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                                 job: job,
                                 userLat: _userLat,
                                 userLng: _userLng,
-                                onTap: () => context.push('/job/${job.id}'),
+                                onTap: () => context.push('/job/${job.id}', extra: job),
                               );
                             },
                           ),
@@ -217,7 +217,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
               width: 40,
               height: 40,
               child: GestureDetector(
-                onTap: () => context.push('/job/${j.id}'),
+                onTap: () => context.push('/job/${j.id}', extra: j),
                 child: const Icon(Icons.work, color: AppColors.primaryAction),
               ),
             ))

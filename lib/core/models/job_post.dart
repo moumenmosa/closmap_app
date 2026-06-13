@@ -106,6 +106,13 @@ class JobPost {
     return buf.toString();
   }
 
+  static String _stringField(dynamic value) {
+    if (value == null) return '';
+    if (value is String) return value;
+    if (value is List) return value.map((e) => e.toString()).join('\n');
+    return value.toString();
+  }
+
   factory JobPost.fromDoc(DocumentSnapshot<Map<String, dynamic>> doc) {
     final d = doc.data() ?? {};
     return JobPost(
@@ -115,7 +122,7 @@ class JobPost {
       companyLogoUrl: d['companyLogoUrl'] ?? '',
       title: d['title'] ?? '',
       experienceLevel: d['experienceLevel'] ?? '',
-      yearsOfExperience: (d['yearsOfExperience'] ?? 0) as int,
+      yearsOfExperience: (d['yearsOfExperience'] as num?)?.toInt() ?? 0,
       skills: List<String>.from(d['skills'] ?? []),
       jobType: d['jobType'] ?? '',
       remoteOption: d['remoteOption'] ?? '',
@@ -128,7 +135,7 @@ class JobPost {
       genderType: d['genderType'] ?? 'All',
       joiningDate: (d['joiningDate'] as Timestamp?)?.toDate(),
       about: d['about'] ?? '',
-      duties: d['duties'] ?? '',
+      duties: _stringField(d['duties']),
       benefits: List<String>.from(d['benefits'] ?? []),
       requiredSkills: List<String>.from(
         d['requiredSkills'] ?? d['skills'] ?? [],
@@ -139,11 +146,11 @@ class JobPost {
       lat: (d['lat'] as num?)?.toDouble(),
       lng: (d['lng'] as num?)?.toDouble(),
       geohash: d['geohash'] ?? '',
-      validityDays: (d['validityDays'] ?? 7) as int,
+      validityDays: (d['validityDays'] as num?)?.toInt() ?? 7,
       publishedAt: (d['publishedAt'] as Timestamp?)?.toDate(),
       expiresAt: (d['expiresAt'] as Timestamp?)?.toDate(),
       status: d['status'] ?? 'draft',
-      applicantsCount: (d['applicantsCount'] ?? 0) as int,
+      applicantsCount: (d['applicantsCount'] as num?)?.toInt() ?? 0,
       createdAt: (d['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
     );
   }

@@ -6,6 +6,7 @@ import '../../core/models/job_post.dart';
 import '../../core/models/seeker_profile.dart';
 import '../../core/providers/providers.dart';
 import '../../core/widgets/common_widgets.dart';
+import '../../core/widgets/profile_image.dart';
 import '../../l10n/app_localizations.dart';
 import 'seeker_preview_screen.dart';
 
@@ -17,9 +18,16 @@ class ApplicantsScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
+    final employerId = ref.watch(authStateProvider).valueOrNull?.uid;
+    if (employerId == null) {
+      return Scaffold(
+        appBar: AppBar(title: Text(l10n.applicants)),
+        body: EmptyState(message: l10n.errorGeneric),
+      );
+    }
 
     return DefaultTabController(
-      length: 5,
+      length: 6,
       child: Scaffold(
         appBar: AppBar(
           title: Text(l10n.applicants),
@@ -29,6 +37,7 @@ class ApplicantsScreen extends ConsumerWidget {
               Tab(text: l10n.newApplicants),
               Tab(text: l10n.viewed),
               const Tab(text: 'Interview'),
+              const Tab(text: 'Hired'),
               Tab(text: l10n.rejectedProfiles),
               Tab(text: l10n.matchingCandidates),
             ],
@@ -39,9 +48,17 @@ class ApplicantsScreen extends ConsumerWidget {
           builder: (context, jobSnap) {
             final job = jobSnap.data;
             return StreamBuilder<List<JobApplication>>(
-              stream: ref.watch(applicationRepositoryProvider).watchJobApplications(jobId),
+              stream: ref
+                  .watch(applicationRepositoryProvider)
+                  .watchJobApplications(jobId, employerId),
               builder: (context, snap) {
-                final apps = snap.data ?? [];
+                if (snap.hasError) {
+                  return EmptyState(message: l10n.errorGeneric);
+                }
+                if (!snap.hasData) {
+                  return const LoadingView();
+                }
+                final apps = snap.data!;
                 final pending = apps
                     .where((a) => a.status == ApplicationStatus.pending)
                     .toList();
@@ -54,6 +71,9 @@ class ApplicantsScreen extends ConsumerWidget {
                 final offered = apps
                     .where((a) => a.status == ApplicationStatus.offered)
                     .toList();
+                final hired = apps
+                    .where((a) => a.status == ApplicationStatus.hired)
+                    .toList();
                 final rejected = apps
                     .where((a) => a.status == ApplicationStatus.rejected)
                     .toList();
@@ -63,8 +83,9 @@ class ApplicantsScreen extends ConsumerWidget {
                     _list(context, pending, l10n),
                     _list(context, [...shortlisted, ...offered], l10n),
                     _list(context, interview, l10n),
+                    _list(context, hired, l10n, showActions: false),
                     _list(context, rejected, l10n, showActions: false),
-                    _matching(context, ref, l10n, job),
+                    _matching(context, ref, l10n, job, employerId),
                   ],
                 );
               },
@@ -87,6 +108,13 @@ class ApplicantsScreen extends ConsumerWidget {
       itemBuilder: (_, i) {
         final a = apps[i];
         return ListTile(
+          leading: CircleAvatar(
+            backgroundColor: Colors.grey.shade200,
+            backgroundImage: ProfileImage.provider(a.seekerPhotoUrl),
+            child: a.seekerPhotoUrl.isEmpty
+                ? const Icon(Icons.person_outline)
+                : null,
+          ),
           title: Text(a.seekerName),
           subtitle: Text(a.status.name),
           trailing: StatusChip(status: a.status.name),
@@ -103,6 +131,7 @@ class ApplicantsScreen extends ConsumerWidget {
     WidgetRef ref,
     AppLocalizations l10n,
     JobPost? job,
+    String employerId,
   ) {
     if (job == null) return EmptyState(message: l10n.noResults);
     return FutureBuilder<List<SeekerProfile>>(
@@ -112,7 +141,9 @@ class ApplicantsScreen extends ConsumerWidget {
         final matcher = ref.read(matchingServiceProvider);
         final appliedIds = <String>{};
         return StreamBuilder<List<JobApplication>>(
-          stream: ref.watch(applicationRepositoryProvider).watchJobApplications(jobId),
+          stream: ref
+              .watch(applicationRepositoryProvider)
+              .watchJobApplications(jobId, employerId),
           builder: (context, appSnap) {
             for (final a in appSnap.data ?? []) {
               appliedIds.add(a.seekerId);
@@ -132,8 +163,16 @@ class ApplicantsScreen extends ConsumerWidget {
               itemBuilder: (_, i) {
                 final e = scored[i];
                 return ListTile(
+                  leading: CircleAvatar(
+                    backgroundColor: Colors.grey.shade200,
+                    backgroundImage: ProfileImage.provider(e.profile.photoUrl),
+                    child: e.profile.photoUrl.isEmpty
+                        ? const Icon(Icons.person_outline)
+                        : null,
+                  ),
                   title: Text(e.profile.latestJobTitle),
-                  subtitle: Text('${l10n.matchingScore}: ${(e.score * 100).toInt()}%'),
+                  subtitle:
+                      Text('${l10n.matchingScore}: ${(e.score * 100).toInt()}%'),
                   trailing: const Icon(Icons.chevron_right),
                   onTap: () => Navigator.of(context).push(
                     MaterialPageRoute(

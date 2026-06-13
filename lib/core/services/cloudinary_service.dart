@@ -2,15 +2,32 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 
-import 'package:http/http.dart' as http;
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_storage/firebase_storage.dart';
+import 'package:uuid/uuid.dart';
+
 import '../config/app_config.dart';
 
+/// Uploads profile images and documents to Firebase Storage.
+/// Images fall back to an embedded data URL when Storage is unavailable.
 class CloudinaryService {
+  CloudinaryService(this._storage, this._auth);
+
+  final FirebaseStorage _storage;
+  final FirebaseAuth _auth;
+  static const _uuid = Uuid();
+  static const _dataUrlMaxBytes = 700000;
+
   Future<String> uploadFile(File file, {String? resourceType}) async {
     final length = await file.length();
     _validateSize(length, resourceType ?? 'auto');
-    return _upload(
-      await http.MultipartFile.fromPath('file', file.path),
+    final name = file.path.split(Platform.pathSeparator).last;
+    if (name.isEmpty) {
+      throw Exception('Could not read the selected file.');
+    }
+    return _putBytes(
+      await file.readAsBytes(),
+      name,
       resourceType: resourceType,
     );
   }
@@ -21,10 +38,7 @@ class CloudinaryService {
     String? resourceType,
   }) async {
     _validateSize(bytes.length, resourceType ?? 'auto');
-    return _upload(
-      http.MultipartFile.fromBytes('file', bytes, filename: filename),
-      resourceType: resourceType,
-    );
+    return _putBytes(bytes, filename, resourceType: resourceType);
   }
 
   void _validateSize(int bytes, String resourceType) {
@@ -42,37 +56,92 @@ class CloudinaryService {
     }
   }
 
-  Future<String> _upload(
-    http.MultipartFile filePart, {
+  Future<String> _putBytes(
+    Uint8List bytes,
+    String filename, {
     String? resourceType,
   }) async {
-    if (!AppConfig.cloudinaryConfigured) {
-      throw Exception('Cloudinary is not configured. See README.md');
+    final uid = _auth.currentUser?.uid;
+    if (uid == null) {
+      throw Exception('You must be signed in to upload files.');
     }
-    final uri = Uri.parse(
-      'https://api.cloudinary.com/v1_1/${AppConfig.cloudinaryCloudName}/'
-      '${resourceType ?? 'auto'}/upload',
-    );
-    final request = http.MultipartRequest('POST', uri)
-      ..fields['upload_preset'] = AppConfig.cloudinaryUploadPreset
-      ..files.add(filePart);
-    final response = await request.send();
-    final body = await response.stream.bytesToString();
-    if (response.statusCode >= 400) {
-      throw Exception(_parseError(body));
+
+    final isDocument = resourceType == 'raw';
+    final ext = _extension(filename, isDocument);
+
+    // Photos/logos: embed as data URL (works without Firebase Storage).
+    if (!isDocument) {
+      return _dataUrlFallback(bytes, ext, isDocument: false);
     }
-    final json = jsonDecode(body) as Map<String, dynamic>;
-    return json['secure_url'] as String;
+
+    try {
+      return await _uploadToStorage(uid, bytes, ext, isDocument);
+    } on FirebaseException {
+      return _dataUrlFallback(bytes, ext, isDocument: true);
+    } catch (_) {
+      return _dataUrlFallback(bytes, ext, isDocument: true);
+    }
   }
 
-  String _parseError(String body) {
-    try {
-      final json = jsonDecode(body) as Map<String, dynamic>;
-      final error = json['error'];
-      if (error is Map && error['message'] != null) {
-        return 'Upload failed: ${error['message']}';
-      }
-    } catch (_) {}
-    return 'Upload failed. Please try again.';
+  Future<String> _uploadToStorage(
+    String uid,
+    Uint8List bytes,
+    String ext,
+    bool isDocument,
+  ) async {
+    final folder = isDocument ? 'documents' : 'images';
+    final path = 'uploads/$uid/$folder/${_uuid.v4()}.$ext';
+    final ref = _storage.ref(path);
+    await ref.putData(
+      bytes,
+      SettableMetadata(contentType: _contentType(ext, isDocument)),
+    );
+    return ref.getDownloadURL();
+  }
+
+  String _dataUrlFallback(
+    Uint8List bytes,
+    String ext, {
+    required bool isDocument,
+  }) {
+    if (bytes.length > _dataUrlMaxBytes) {
+      throw Exception(
+        isDocument
+            ? 'File is too large. Use a file under 700 KB or enable Firebase Storage.'
+            : 'Image is too large. Choose a smaller photo or enable Firebase Storage.',
+      );
+    }
+    final mime = _contentType(ext, isDocument);
+    return 'data:$mime;base64,${base64Encode(bytes)}';
+  }
+
+  String _extension(String filename, bool isDocument) {
+    final dot = filename.lastIndexOf('.');
+    if (dot != -1 && dot < filename.length - 1) {
+      return filename.substring(dot + 1).toLowerCase();
+    }
+    return isDocument ? 'pdf' : 'jpg';
+  }
+
+  String _contentType(String ext, bool isDocument) {
+    switch (ext) {
+      case 'pdf':
+        return 'application/pdf';
+      case 'doc':
+        return 'application/msword';
+      case 'docx':
+        return 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+      case 'png':
+        return 'image/png';
+      case 'webp':
+        return 'image/webp';
+      case 'gif':
+        return 'image/gif';
+      case 'jpg':
+      case 'jpeg':
+        return 'image/jpeg';
+      default:
+        return isDocument ? 'application/octet-stream' : 'image/jpeg';
+    }
   }
 }

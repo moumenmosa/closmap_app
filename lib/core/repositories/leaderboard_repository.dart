@@ -11,8 +11,16 @@ class LeaderboardRepository {
   }
 
   Future<List<LeaderboardEntry>> _loadTop(int limit) async {
-    final live = await _computeLive(limit);
-    if (live.isNotEmpty) return live;
+    try {
+      final live = await _computeLive(limit);
+      if (live.isNotEmpty) return live;
+    } catch (_) {
+      // Fall back to seeded leaderboard when live aggregation fails.
+    }
+    return _loadSeeded(limit);
+  }
+
+  Future<List<LeaderboardEntry>> _loadSeeded(int limit) async {
     final seeded = await _db
         .collection('leaderboard')
         .orderBy('rank')
@@ -21,9 +29,9 @@ class LeaderboardRepository {
     return seeded.docs.map(LeaderboardEntry.fromDoc).toList();
   }
 
+  /// Ranks employers using job data only (readable by all signed-in users).
   Future<List<LeaderboardEntry>> _computeLive(int limit) async {
     final jobsSnap = await _db.collection('jobs').get();
-    final appsSnap = await _db.collection('applications').get();
 
     final scores = <String, _EmployerScore>{};
 
@@ -32,17 +40,9 @@ class LeaderboardRepository {
       if (d['status'] != 'active') continue;
       final employerId = d['employerId'] as String? ?? '';
       if (employerId.isEmpty) continue;
-      scores.putIfAbsent(employerId, () => _EmployerScore()).activeJobs++;
-    }
-
-    for (final doc in appsSnap.docs) {
-      final d = doc.data();
-      final employerId = d['employerId'] as String? ?? '';
-      if (employerId.isEmpty) continue;
       final entry = scores.putIfAbsent(employerId, () => _EmployerScore());
-      entry.totalApplicants++;
-      final status = d['status'] as String? ?? 'pending';
-      if (status == 'hired') entry.hired++;
+      entry.activeJobs++;
+      entry.totalApplicants += (d['applicantsCount'] as num?)?.toInt() ?? 0;
     }
 
     if (scores.isEmpty) return [];
@@ -58,9 +58,7 @@ class LeaderboardRepository {
           ? pd['companyName'] as String
           : (ud['companyName'] as String? ?? 'Company');
       final logoUrl = pd['logoUrl'] as String? ?? '';
-      final score = e.value.activeJobs * 10 +
-          e.value.totalApplicants * 5 +
-          e.value.hired * 20;
+      final score = e.value.activeJobs * 10 + e.value.totalApplicants * 5;
       entries.add(LeaderboardEntry(
         id: e.key,
         rank: 0,
@@ -90,5 +88,4 @@ class LeaderboardRepository {
 class _EmployerScore {
   int activeJobs = 0;
   int totalApplicants = 0;
-  int hired = 0;
 }

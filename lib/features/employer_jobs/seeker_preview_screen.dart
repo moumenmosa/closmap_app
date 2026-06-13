@@ -7,6 +7,7 @@ import '../../core/models/view_request.dart';
 import '../../core/providers/providers.dart';
 import '../../core/widgets/app_button.dart';
 import '../../core/widgets/common_widgets.dart';
+import '../../core/widgets/profile_image.dart';
 import '../../l10n/app_localizations.dart';
 
 class SeekerPreviewScreen extends ConsumerStatefulWidget {
@@ -39,10 +40,15 @@ class _SeekerPreviewScreenState extends ConsumerState<SeekerPreviewScreen> {
   Future<void> _checkUnlock() async {
     final employer = ref.read(currentUserProvider).valueOrNull;
     if (employer == null) return;
-    final ok = await ref
-        .read(applicationRepositoryProvider)
-        .hasApprovedViewRequest(employer.uid, widget.seekerId);
-    if (mounted) setState(() => _unlocked = ok);
+    final repo = ref.read(applicationRepositoryProvider);
+    final approved =
+        await repo.hasApprovedViewRequest(employer.uid, widget.seekerId);
+    var applied = false;
+    final job = widget.job;
+    if (job != null) {
+      applied = await repo.hasApplied(widget.seekerId, job.id);
+    }
+    if (mounted) setState(() => _unlocked = approved || applied);
   }
 
   Future<void> _requestView(SeekerProfile profile, AppLocalizations l10n) async {
@@ -60,6 +66,9 @@ class _SeekerPreviewScreenState extends ConsumerState<SeekerPreviewScreen> {
         );
         return;
       }
+      final employerProfile = await ref
+          .read(userRepositoryProvider)
+          .getEmployerProfile(employer.uid);
       final job = widget.job;
       final requestId =
           await ref.read(applicationRepositoryProvider).sendViewRequest(
@@ -68,6 +77,7 @@ class _SeekerPreviewScreenState extends ConsumerState<SeekerPreviewScreen> {
                   employerId: employer.uid,
                   seekerId: widget.seekerId,
                   companyName: employer.companyName,
+                  companyLogoUrl: employerProfile?.logoUrl ?? '',
                   jobId: job?.id ?? '',
                   jobTitle: job?.title ?? l10n.headhunting,
                   createdAt: DateTime.now(),
@@ -115,8 +125,7 @@ class _SeekerPreviewScreenState extends ConsumerState<SeekerPreviewScreen> {
               Center(
                 child: CircleAvatar(
                   radius: 48,
-                  backgroundImage:
-                      profile.photoUrl.isNotEmpty ? NetworkImage(profile.photoUrl) : null,
+                  backgroundImage: ProfileImage.provider(profile.photoUrl),
                   child: profile.photoUrl.isEmpty
                       ? const Icon(Icons.person, size: 40)
                       : null,

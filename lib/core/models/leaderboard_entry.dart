@@ -19,10 +19,10 @@ class LeaderboardEntry {
     final d = doc.data() ?? {};
     return LeaderboardEntry(
       id: doc.id,
-      rank: (d['rank'] ?? 0) as int,
-      companyName: d['companyName'] ?? '',
-      logoUrl: d['logoUrl'] ?? '',
-      score: (d['score'] ?? 0) as int,
+      rank: (d['rank'] as num?)?.toInt() ?? 0,
+      companyName: d['companyName'] as String? ?? '',
+      logoUrl: d['logoUrl'] as String? ?? '',
+      score: (d['score'] as num?)?.toInt() ?? 0,
     );
   }
 }

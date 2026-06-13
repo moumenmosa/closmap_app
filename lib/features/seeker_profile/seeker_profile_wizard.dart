@@ -1,6 +1,5 @@
 import 'dart:io';
 
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
@@ -17,6 +16,7 @@ import '../../core/theme/app_theme.dart';
 import '../../core/utils/formatters.dart';
 import '../../core/widgets/app_text_field.dart';
 import '../../core/widgets/design/design_widgets.dart';
+import '../../core/widgets/profile_image.dart';
 import '../../l10n/app_localizations.dart';
 import 'add_education_sheet.dart';
 import 'add_experience_sheet.dart';
@@ -29,10 +29,12 @@ class SeekerProfileWizard extends ConsumerStatefulWidget {
     super.key,
     this.initial,
     this.enforceDailyLimit = false,
+    this.initialStep = 0,
   });
 
   final SeekerProfile? initial;
   final bool enforceDailyLimit;
+  final int initialStep;
 
   @override
   ConsumerState<SeekerProfileWizard> createState() =>
@@ -92,6 +94,15 @@ class _SeekerProfileWizardState extends ConsumerState<SeekerProfileWizard> {
         _otherLinks.add(TextEditingController(text: link));
       }
     }
+    final step = widget.initialStep.clamp(0, _stepCount - 1);
+    if (step > 0) {
+      _step = step;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted && _pageController.hasClients) {
+          _pageController.jumpToPage(step);
+        }
+      });
+    }
   }
 
   @override
@@ -107,7 +118,12 @@ class _SeekerProfileWizardState extends ConsumerState<SeekerProfileWizard> {
   double get _progress => (_step + 1) / _stepCount;
 
   Future<void> _pickPhoto() async {
-    final file = await ImagePicker().pickImage(source: ImageSource.gallery);
+    final file = await ImagePicker().pickImage(
+      source: ImageSource.gallery,
+      maxWidth: 1024,
+      maxHeight: 1024,
+      imageQuality: 80,
+    );
     if (file == null) return;
     setState(() => _loading = true);
     try {
@@ -202,7 +218,11 @@ class _SeekerProfileWizardState extends ConsumerState<SeekerProfileWizard> {
             enforceDailyLimit: widget.enforceDailyLimit,
           );
       if (!mounted) return;
-      context.go('/seeker/home');
+      if (widget.enforceDailyLimit) {
+        context.go('/seeker/profile');
+      } else {
+        context.go('/seeker/home');
+      }
     } catch (e) {
       if (!mounted) return;
       if (e.toString().contains('profile_update_limit')) {
@@ -273,13 +293,14 @@ class _SeekerProfileWizardState extends ConsumerState<SeekerProfileWizard> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final isLastStep = _step == _stepCount - 1;
+    final isEditMode = widget.enforceDailyLimit;
 
     return Scaffold(
       backgroundColor: AppColors.scaffoldBg,
       appBar: DesignAppBar(
         title: 'Personal profile',
         onBack: _back,
-        actionLabel: isLastStep ? l10n.start : l10n.next,
+        actionLabel: isLastStep ? (isEditMode ? l10n.save : l10n.start) : l10n.next,
         onAction: _loading ? null : _next,
       ),
       body: Column(
@@ -328,11 +349,11 @@ class _SeekerProfileWizardState extends ConsumerState<SeekerProfileWizard> {
                   ),
                   child: ClipOval(
                     child: _photoUrl.isNotEmpty
-                        ? CachedNetworkImage(
-                            imageUrl: _photoUrl,
+                        ? ProfileImage(
+                            url: _photoUrl,
+                            width: 120,
+                            height: 120,
                             fit: BoxFit.cover,
-                            errorWidget: (_, __, ___) =>
-                                const Icon(Icons.person, size: 48),
                           )
                         : CustomPaint(
                             painter: _DashedCirclePainter(),

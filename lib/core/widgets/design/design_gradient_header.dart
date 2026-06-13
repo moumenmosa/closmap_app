@@ -1,6 +1,6 @@
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import '../../theme/app_colors.dart';
+import '../profile_image.dart';
 
 class DesignGradientHeader extends StatelessWidget {
   const DesignGradientHeader({
@@ -29,10 +29,10 @@ class DesignGradientHeader extends StatelessWidget {
           fit: StackFit.expand,
           children: [
             if (imageUrl != null && imageUrl!.isNotEmpty)
-              CachedNetworkImage(
-                imageUrl: imageUrl!,
+              ProfileImage(
+                url: imageUrl!,
                 fit: BoxFit.cover,
-                errorWidget: (_, __, ___) => const _DefaultGradient(),
+                errorWidget: const _DefaultGradient(),
               )
             else
               const _DefaultGradient(),

@@ -88,13 +88,25 @@ class _AddJobScreenState extends ConsumerState<AddJobScreen> {
   bool _published = false;
   String? _draftId;
   String _status = 'draft';
+  String _companyLogoUrl = '';
 
   @override
   void initState() {
     super.initState();
+    Future.microtask(_loadEmployerLogo);
     final jobId = widget.jobId;
     if (jobId != null && jobId.isNotEmpty) {
       Future.microtask(() => _loadJob(jobId));
+    }
+  }
+
+  Future<void> _loadEmployerLogo() async {
+    final uid = ref.read(authStateProvider).valueOrNull?.uid;
+    if (uid == null) return;
+    final profile =
+        await ref.read(userRepositoryProvider).getEmployerProfile(uid);
+    if (mounted && profile != null) {
+      setState(() => _companyLogoUrl = profile.logoUrl);
     }
   }
 
@@ -238,6 +250,7 @@ class _AddJobScreenState extends ConsumerState<AddJobScreen> {
         id: _draftId ?? widget.jobId ?? '',
         employerId: employerId,
         companyName: companyName,
+        companyLogoUrl: _companyLogoUrl,
         title: _title,
         experienceLevel: _experienceLevel,
         yearsOfExperience: _yearsOfExperience,

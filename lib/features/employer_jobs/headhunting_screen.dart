@@ -8,6 +8,7 @@ import '../../core/providers/providers.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/utils/geo_utils.dart';
 import '../../core/widgets/common_widgets.dart';
+import '../../core/widgets/profile_image.dart';
 import '../../l10n/app_localizations.dart';
 import 'seeker_preview_screen.dart';
 
@@ -134,7 +135,13 @@ class _HeadhuntingScreenState extends ConsumerState<HeadhuntingScreen> {
                   itemBuilder: (_, i) {
                     final s = seekers[i];
                     return ListTile(
-                      leading: const CircleAvatar(child: Icon(Icons.person)),
+                      leading: CircleAvatar(
+                        backgroundColor: Colors.grey.shade200,
+                        backgroundImage: ProfileImage.provider(s.photoUrl),
+                        child: s.photoUrl.isEmpty
+                            ? const Icon(Icons.person)
+                            : null,
+                      ),
                       title: Text(s.latestJobTitle),
                       subtitle: Text(s.city),
                       onTap: () => Navigator.of(context).push(

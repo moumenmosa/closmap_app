@@ -70,7 +70,7 @@ class _SeekerHomeScreenState extends ConsumerState<SeekerHomeScreen> {
           userId: user.uid,
           subject: l10n.requests,
           body: l10n.pendingRequestReminder,
-          route: '/applications',
+          route: '/applications?tab=requests',
         );
   }
 
@@ -172,7 +172,7 @@ class _SeekerHomeScreenState extends ConsumerState<SeekerHomeScreen> {
                             job: jobs[i],
                             userLat: _userLocation?.latitude,
                             userLng: _userLocation?.longitude,
-                            onTap: () => context.push('/job/${jobs[i].id}'),
+                            onTap: () => context.push('/job/${jobs[i].id}', extra: jobs[i]),
                           ),
                         );
                       }
@@ -245,9 +245,22 @@ class _SeekerHomeScreenState extends ConsumerState<SeekerHomeScreen> {
                   HomeTopBar(
                     onMenu: () => Scaffold.of(scaffoldContext).openDrawer(),
                     actions: [
-                      IconButton(
-                        icon: const Icon(Icons.work_history_outlined),
-                        onPressed: () => context.push('/applications'),
+                      StreamBuilder(
+                        stream: ref
+                            .watch(applicationRepositoryProvider)
+                            .watchPendingRequests(user.uid),
+                        builder: (context, snap) {
+                          final count = snap.data?.length ?? 0;
+                          return Badge(
+                            isLabelVisible: count > 0,
+                            label: Text('$count'),
+                            child: IconButton(
+                              icon: const Icon(Icons.work_history_outlined),
+                              onPressed: () =>
+                                  context.push('/applications?tab=requests'),
+                            ),
+                          );
+                        },
                       ),
                       IconButton(
                         icon: const Icon(Icons.notifications_outlined),
@@ -332,7 +345,7 @@ class _SeekerHomeScreenState extends ConsumerState<SeekerHomeScreen> {
               width: 40,
               height: 40,
               child: GestureDetector(
-                onTap: () => context.push('/job/${j.id}'),
+                onTap: () => context.push('/job/${j.id}', extra: j),
                 child: const Icon(Icons.work, color: AppColors.primaryAction),
               ),
             ))
