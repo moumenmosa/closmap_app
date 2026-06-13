@@ -20,6 +20,13 @@ class LoginScreen extends ConsumerStatefulWidget {
 
 class _LoginScreenState extends ConsumerState<LoginScreen> {
   static const _savedEmailKey = 'saved_login_email';
+  static const _demoPassword = 'Demo1234!';
+
+  static const _demoAccounts = {
+    'admin': 'admin@closemap.demo',
+    'seeker': 'sarah.seeker@closemap.demo',
+    'employer': 'techcorp@closemap.demo',
+  };
 
   final _formKey = GlobalKey<FormState>();
   final _email = TextEditingController();
@@ -90,6 +97,16 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     } finally {
       if (mounted) setState(() => _loading = false);
     }
+  }
+
+  Future<void> _demoLogin(String role) async {
+    final email = _demoAccounts[role];
+    if (email == null) return;
+    setState(() {
+      _email.text = email;
+      _password.text = _demoPassword;
+    });
+    await _login();
   }
 
   @override
@@ -163,6 +180,47 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         loading: _loading,
                         leading: const Icon(Icons.fingerprint, color: Colors.white),
                         onPressed: _login,
+                      ),
+                      const SizedBox(height: 20),
+                      Text(
+                        'Demo shortcuts',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          color: AppColors.textSecondary,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: OutlinedButton(
+                              onPressed: _loading
+                                  ? null
+                                  : () => _demoLogin('admin'),
+                              child: const Text('Admin'),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: OutlinedButton(
+                              onPressed: _loading
+                                  ? null
+                                  : () => _demoLogin('seeker'),
+                              child: const Text('Seeker'),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: OutlinedButton(
+                              onPressed: _loading
+                                  ? null
+                                  : () => _demoLogin('employer'),
+                              child: const Text('Employer'),
+                            ),
+                          ),
+                        ],
                       ),
                     ],
                   ),

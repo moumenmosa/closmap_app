@@ -10,8 +10,20 @@ service cloud.firestore {
       return signedIn() && request.auth.uid == uid;
     }
 
+    function userDoc(uid) {
+      return get(/databases/$(database)/documents/users/$(uid));
+    }
+
     function userRole(uid) {
-      return get(/databases/$(database)/documents/users/$(uid)).data.role;
+      return userDoc(uid).data.role;
+    }
+
+    function isAdmin() {
+      return signedIn() && (
+        (exists(/databases/$(database)/documents/users/$(request.auth.uid))
+            && userRole(request.auth.uid) == 'admin')
+        || request.auth.token.email == 'admin@closemap.demo'
+      );
     }
 
     function isEmployer() {
@@ -20,10 +32,6 @@ service cloud.firestore {
 
     function isSeeker() {
       return signedIn() && userRole(request.auth.uid) == 'seeker';
-    }
-
-    function isAdmin() {
-      return signedIn() && userRole(request.auth.uid) == 'admin';
     }
 
     function validNotificationPrefs(prefs) {
@@ -151,7 +159,10 @@ service cloud.firestore {
     // ---------- Lookups (job titles, sectors, skills...) ----------
     match /lookups/{docId} {
       allow read: if true;
-      allow write: if isAdmin();
+      allow create, update: if isAdmin()
+        && request.resource.data.keys().hasOnly(['values'])
+        && request.resource.data.values is list;
+      allow delete: if isAdmin();
     }
 
     // ---------- Login attempt tracking ----------
