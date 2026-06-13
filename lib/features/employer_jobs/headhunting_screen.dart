@@ -70,6 +70,7 @@ class _HeadhuntingScreenState extends ConsumerState<HeadhuntingScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    final uid = ref.watch(authStateProvider).valueOrNull?.uid;
     return Scaffold(
       appBar: AppBar(
         title: Text(l10n.headhunting),
@@ -80,31 +81,74 @@ class _HeadhuntingScreenState extends ConsumerState<HeadhuntingScreen> {
           ),
         ],
       ),
-      body: StreamBuilder<List<SeekerProfile>>(
-        stream: ref.watch(userRepositoryProvider).watchSeekersWithLocation(),
-        builder: (context, snap) {
-          final seekers = _nearby(snap.data ?? []);
-          if (seekers.isEmpty) return EmptyState(message: l10n.noResults);
-          if (_showMap && _employerLocation != null) {
-            return _mapView(seekers, l10n);
-          }
-          return ListView.builder(
-            itemCount: seekers.length,
-            itemBuilder: (_, i) {
-              final s = seekers[i];
-              return ListTile(
-                leading: const CircleAvatar(child: Icon(Icons.person)),
-                title: Text(s.latestJobTitle),
-                subtitle: Text(s.city),
-                onTap: () => Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (_) => SeekerPreviewScreen(seekerId: s.uid),
-                  ),
-                ),
-              );
-            },
-          );
-        },
+      body: Column(
+        children: [
+          if (uid != null)
+            SizedBox(
+              height: 120,
+              child: StreamBuilder(
+                stream: ref
+                    .watch(applicationRepositoryProvider)
+                    .watchEmployerHeadhuntingRequests(uid),
+                builder: (context, snap) {
+                  final reqs = snap.data ?? [];
+                  if (reqs.isEmpty) return const SizedBox.shrink();
+                  return ListView.builder(
+                    scrollDirection: Axis.horizontal,
+                    padding: const EdgeInsets.all(12),
+                    itemCount: reqs.length,
+                    itemBuilder: (_, i) {
+                      final r = reqs[i];
+                      return Card(
+                        child: Padding(
+                          padding: const EdgeInsets.all(12),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(
+                                r.seekerId.substring(0, 8),
+                                style: const TextStyle(fontWeight: FontWeight.bold),
+                              ),
+                              StatusChip(status: r.status.name),
+                            ],
+                          ),
+                        ),
+                      );
+                    },
+                  );
+                },
+              ),
+            ),
+          Expanded(
+            child: StreamBuilder<List<SeekerProfile>>(
+              stream: ref.watch(userRepositoryProvider).watchSeekersWithLocation(),
+              builder: (context, snap) {
+                final seekers = _nearby(snap.data ?? []);
+                if (seekers.isEmpty) return EmptyState(message: l10n.noResults);
+                if (_showMap && _employerLocation != null) {
+                  return _mapView(seekers, l10n);
+                }
+                return ListView.builder(
+                  itemCount: seekers.length,
+                  itemBuilder: (_, i) {
+                    final s = seekers[i];
+                    return ListTile(
+                      leading: const CircleAvatar(child: Icon(Icons.person)),
+                      title: Text(s.latestJobTitle),
+                      subtitle: Text(s.city),
+                      onTap: () => Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) => SeekerPreviewScreen(seekerId: s.uid),
+                        ),
+                      ),
+                    );
+                  },
+                );
+              },
+            ),
+          ),
+        ],
       ),
     );
   }

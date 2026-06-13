@@ -166,6 +166,23 @@ class _ApplicationsBody extends ConsumerWidget {
     );
   }
 
+  String _applicationStatusLabel(ApplicationStatus status) {
+    switch (status) {
+      case ApplicationStatus.pending:
+        return l10n.pending;
+      case ApplicationStatus.shortlisted:
+        return 'Shortlisted';
+      case ApplicationStatus.interview:
+        return 'Interview';
+      case ApplicationStatus.offered:
+        return 'Offered';
+      case ApplicationStatus.hired:
+        return 'Hired';
+      case ApplicationStatus.rejected:
+        return l10n.rejected;
+    }
+  }
+
   Widget _appliedTab(BuildContext context, WidgetRef ref, String uid) {
     return StreamBuilder<List<JobApplication>>(
       stream: ref.watch(applicationRepositoryProvider).watchSeekerApplications(uid),
@@ -201,7 +218,7 @@ class _ApplicationsBody extends ConsumerWidget {
                 builder: (job) => JobCard(
                   job: job,
                   onTap: () => context.push('/job/${job.id}'),
-                  trailing: StatusChip(status: app.status.name),
+                  trailing: StatusChip(status: _applicationStatusLabel(app.status)),
                 ),
               ),
             );
@@ -305,35 +322,14 @@ class _ApplicationsBody extends ConsumerWidget {
             final r = reqs[i];
             return Card(
               margin: const EdgeInsets.all(12),
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(r.companyName, style: const TextStyle(fontWeight: FontWeight.bold)),
-                    if (r.jobTitle.isNotEmpty) Text(r.jobTitle),
-                    const SizedBox(height: 12),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: ElevatedButton(
-                            style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
-                            onPressed: () => onRespond(r, true, l10n),
-                            child: Text(l10n.approve),
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: OutlinedButton(
-                            style: OutlinedButton.styleFrom(foregroundColor: Colors.red),
-                            onPressed: () => onRespond(r, false, l10n),
-                            child: Text(l10n.reject),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
+              child: ListTile(
+                title: Text(r.companyName,
+                    style: const TextStyle(fontWeight: FontWeight.bold)),
+                subtitle: Text(
+                  r.jobTitle.isNotEmpty ? r.jobTitle : l10n.headhunting,
                 ),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () => context.push('/requests/${r.id}'),
               ),
             );
           },

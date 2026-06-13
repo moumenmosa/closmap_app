@@ -9,13 +9,16 @@ class ApplicationRepository {
   final FirebaseFirestore _db;
 
   Future<bool> hasApplied(String seekerId, String jobId) async {
-    final snap = await _db
+    final docId = '${seekerId}_$jobId';
+    final doc = await _db.collection('applications').doc(docId).get();
+    if (doc.exists) return true;
+    final legacy = await _db
         .collection('applications')
         .where('seekerId', isEqualTo: seekerId)
         .where('jobId', isEqualTo: jobId)
         .limit(1)
         .get();
-    return snap.docs.isNotEmpty;
+    return legacy.docs.isNotEmpty;
   }
 
   /// Creates the application atomically using a deterministic doc id so a
@@ -72,11 +75,14 @@ class ApplicationRepository {
 
   Future<void> updateApplicationStatus(
     String id,
-    ApplicationStatus status,
-  ) async {
-    await _db.collection('applications').doc(id).update({
-      'status': status.name,
-    });
+    ApplicationStatus status, {
+    String? interviewNote,
+  }) async {
+    final data = <String, dynamic>{'status': status.name};
+    if (interviewNote != null) {
+      data['interviewNote'] = interviewNote;
+    }
+    await _db.collection('applications').doc(id).update(data);
   }
 
   Future<JobApplication?> getApplication(String id) async {
@@ -234,8 +240,27 @@ class ApplicationRepository {
     return snap.docs.isEmpty;
   }
 
-  Future<void> sendViewRequest(ViewRequest request) async {
-    await _db.collection('viewRequests').add(request.toMap());
+  Future<String> sendViewRequest(ViewRequest request) async {
+    final ref = await _db.collection('viewRequests').add(request.toMap());
+    return ref.id;
+  }
+
+  Future<ViewRequest?> getViewRequest(String id) async {
+    final doc = await _db.collection('viewRequests').doc(id).get();
+    if (!doc.exists) return null;
+    return ViewRequest.fromDoc(doc);
+  }
+
+  Stream<List<ViewRequest>> watchEmployerHeadhuntingRequests(String employerId) {
+    return _db
+        .collection('viewRequests')
+        .where('employerId', isEqualTo: employerId)
+        .orderBy('createdAt', descending: true)
+        .snapshots()
+        .map((s) => s.docs
+            .map(ViewRequest.fromDoc)
+            .where((r) => r.jobId.isEmpty)
+            .toList());
   }
 
   Future<void> respondToViewRequest(

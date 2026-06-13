@@ -41,38 +41,61 @@ class LeaderboardScreen extends ConsumerWidget {
       body: StreamBuilder<List<LeaderboardEntry>>(
         stream: ref.watch(leaderboardRepositoryProvider).watchTopCompanies(),
         builder: (context, snap) {
-          final entries = snap.data ?? [];
+          if (snap.hasError) {
+            return EmptyState(message: l10n.errorGeneric);
+          }
+          if (!snap.hasData) {
+            return const LoadingView();
+          }
+          final entries = snap.data!;
           if (entries.isEmpty) {
             return EmptyState(message: l10n.noResults);
           }
 
-          return ListView(
-            padding: const EdgeInsets.all(20),
-            children: [
-              Row(
-                children: [
-                  Text(
-                    l10n.top10Companies,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.w700,
-                      fontSize: 16,
+          return RefreshIndicator(
+            onRefresh: () async {
+              ref.invalidate(leaderboardRepositoryProvider);
+            },
+            child: ListView(
+              padding: const EdgeInsets.all(20),
+              children: [
+                Row(
+                  children: [
+                    Text(
+                      l10n.top10Companies,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w700,
+                        fontSize: 16,
+                      ),
                     ),
-                  ),
-                  const SizedBox(width: 6),
-                  const Icon(
-                    Icons.info_outline,
-                    size: 18,
+                    const SizedBox(width: 6),
+                    Tooltip(
+                      message:
+                          'Ranked by active jobs, applicants, and hires.',
+                      child: const Icon(
+                        Icons.info_outline,
+                        size: 18,
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                const Text(
+                  'Score = active jobs × 10 + applicants × 5 + hires × 20',
+                  style: TextStyle(
                     color: AppColors.textSecondary,
+                    fontSize: 12,
                   ),
-                ],
-              ),
-              const SizedBox(height: 16),
-              ...entries.map((entry) => _LeaderboardTile(
-                    entry: entry,
-                    rankLabel: _rankLabel(entry.rank, l10n),
-                    medalColor: _medalColor(entry.rank),
-                  )),
-            ],
+                ),
+                const SizedBox(height: 16),
+                ...entries.map((entry) => _LeaderboardTile(
+                      entry: entry,
+                      rankLabel: _rankLabel(entry.rank, l10n),
+                      medalColor: _medalColor(entry.rank),
+                    )),
+              ],
+            ),
           );
         },
       ),
@@ -117,7 +140,7 @@ class _LeaderboardTile extends StatelessWidget {
           style: const TextStyle(fontWeight: FontWeight.w700),
         ),
         subtitle: Text(
-          rankLabel,
+          '$rankLabel · ${entry.score} pts',
           style: const TextStyle(color: AppColors.textSecondary),
         ),
         trailing: _MedalBadge(rank: entry.rank, color: medalColor),

@@ -60,7 +60,11 @@ class StatusChip extends StatelessWidget {
       case 'pending':
         return AppColors.statusPending;
       case 'viewed':
+      case 'shortlisted':
       case 'approved':
+      case 'interview':
+      case 'offered':
+      case 'hired':
         return AppColors.statusViewed;
       case 'rejected':
         return AppColors.statusRejected;

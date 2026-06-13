@@ -12,6 +12,7 @@ import '../../core/utils/formatters.dart';
 import '../../core/utils/geo_utils.dart';
 import '../../core/widgets/app_text_field.dart';
 import '../../core/widgets/design/design_widgets.dart';
+import '../../core/services/job_publish_service.dart';
 import '../../l10n/app_localizations.dart';
 
 class _SalaryPreset {
@@ -285,35 +286,36 @@ class _AddJobScreenState extends ConsumerState<AddJobScreen> {
     }
 
     setState(() => _loading = true);
-    final subRepo = ref.read(subscriptionRepositoryProvider);
     try {
-      // Save the latest form values directly (bypasses the draft-only guard
-      // in _saveDraft); publishJob below sets status/publishedAt/expiresAt.
-      _draftId = await ref
-          .read(jobRepositoryProvider)
-          .saveJob(_buildJob(user.uid, user.companyName));
-      final id = _draftId!;
-      final ok = await subRepo.deductPoint(user.uid, 'Published job: $_title');
-      if (!ok) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(l10n.insufficientPoints)),
-          );
-        }
+      if (_draftId == null || _draftId!.isEmpty) {
+        _draftId = await ref
+            .read(jobRepositoryProvider)
+            .saveJob(_buildJob(user.uid, user.companyName));
+      }
+      final job = _buildJob(user.uid, user.companyName);
+      final result = await publishJobWithSubscription(
+        ref,
+        job: job,
+        validityDays: _validity,
+        user: user,
+      );
+      if (!result.success) {
+        if (!mounted) return;
+        final msg = switch (result.errorMessage) {
+          'no_subscription' => l10n.noSubscription,
+          'insufficient_points' => l10n.insufficientPoints,
+          _ => result.errorMessage ?? l10n.errorGeneric,
+        };
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
         return;
       }
-      try {
-        await ref.read(jobRepositoryProvider).publishJob(id, _validity);
-      } catch (e) {
-        await subRepo.refundPoint(user.uid, 'Refund: failed publish $_title');
-        rethrow;
-      }
       _published = true;
+      _status = 'active';
       if (mounted) context.pop();
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.errorGeneric)),
+          SnackBar(content: Text('${l10n.errorGeneric}\n$e')),
         );
       }
     } finally {

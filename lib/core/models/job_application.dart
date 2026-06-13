@@ -1,7 +1,13 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
-/// pending (blue) -> viewed (green) | rejected (red)
-enum ApplicationStatus { pending, viewed, rejected }
+enum ApplicationStatus {
+  pending,
+  shortlisted,
+  interview,
+  offered,
+  hired,
+  rejected,
+}
 
 class JobApplication {
   final String id;
@@ -14,6 +20,7 @@ class JobApplication {
   final ApplicationStatus status;
   final DateTime appliedAt;
   final bool removedBySeeker;
+  final String interviewNote;
 
   const JobApplication({
     required this.id,
@@ -26,7 +33,16 @@ class JobApplication {
     this.status = ApplicationStatus.pending,
     required this.appliedAt,
     this.removedBySeeker = false,
+    this.interviewNote = '',
   });
+
+  static ApplicationStatus statusFromString(String? raw) {
+    if (raw == 'viewed') return ApplicationStatus.shortlisted;
+    return ApplicationStatus.values.firstWhere(
+      (s) => s.name == (raw ?? 'pending'),
+      orElse: () => ApplicationStatus.pending,
+    );
+  }
 
   factory JobApplication.fromDoc(DocumentSnapshot<Map<String, dynamic>> doc) {
     final d = doc.data() ?? {};
@@ -38,12 +54,10 @@ class JobApplication {
       jobTitle: d['jobTitle'] ?? '',
       companyName: d['companyName'] ?? '',
       seekerName: d['seekerName'] ?? '',
-      status: ApplicationStatus.values.firstWhere(
-        (s) => s.name == (d['status'] ?? 'pending'),
-        orElse: () => ApplicationStatus.pending,
-      ),
+      status: statusFromString(d['status'] as String?),
       appliedAt: (d['appliedAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
       removedBySeeker: d['removedBySeeker'] ?? false,
+      interviewNote: d['interviewNote'] ?? '',
     );
   }
 
@@ -57,6 +71,7 @@ class JobApplication {
         'status': status.name,
         'appliedAt': Timestamp.fromDate(appliedAt),
         'removedBySeeker': removedBySeeker,
+        'interviewNote': interviewNote,
       };
 }
 

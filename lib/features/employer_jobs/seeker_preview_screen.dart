@@ -61,22 +61,23 @@ class _SeekerPreviewScreenState extends ConsumerState<SeekerPreviewScreen> {
         return;
       }
       final job = widget.job;
-      await ref.read(applicationRepositoryProvider).sendViewRequest(
-            ViewRequest(
-              id: '',
-              employerId: employer.uid,
-              seekerId: widget.seekerId,
-              companyName: employer.companyName,
-              jobId: job?.id ?? '',
-              jobTitle: job?.title ?? l10n.headhunting,
-              createdAt: DateTime.now(),
-            ),
-          );
+      final requestId =
+          await ref.read(applicationRepositoryProvider).sendViewRequest(
+                ViewRequest(
+                  id: '',
+                  employerId: employer.uid,
+                  seekerId: widget.seekerId,
+                  companyName: employer.companyName,
+                  jobId: job?.id ?? '',
+                  jobTitle: job?.title ?? l10n.headhunting,
+                  createdAt: DateTime.now(),
+                ),
+              );
       await ref.read(notificationServiceProvider).send(
             userId: widget.seekerId,
             subject: l10n.requests,
             body: '${employer.companyName} ${l10n.requests}',
-            route: '/applications',
+            route: '/requests/$requestId',
           );
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(

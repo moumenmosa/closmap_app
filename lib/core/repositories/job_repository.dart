@@ -159,6 +159,26 @@ class JobRepository {
     return job.id;
   }
 
+  /// Atomically activates a job via merge-set (avoids update-not-found failures).
+  Future<String> publishJobPost(JobPost job, int validityDays) async {
+    final now = DateTime.now();
+    final expiresAt = now.add(Duration(days: validityDays));
+    final data = Map<String, dynamic>.from(job.toMap())
+      ..['status'] = 'active'
+      ..['publishedAt'] = Timestamp.fromDate(now)
+      ..['expiresAt'] = Timestamp.fromDate(expiresAt)
+      ..['validityDays'] = validityDays
+      ..['updatedAt'] = FieldValue.serverTimestamp();
+
+    if (job.id.isEmpty) {
+      final ref = await _jobs.add(data);
+      return ref.id;
+    }
+    await _jobs.doc(job.id).set(data, SetOptions(merge: true));
+    return job.id;
+  }
+
+  @Deprecated('Use publishJobPost')
   Future<void> publishJob(String jobId, int validityDays) async {
     final now = DateTime.now();
     await _jobs.doc(jobId).update({

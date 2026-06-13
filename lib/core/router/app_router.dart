@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../features/applications/applications_screen.dart';
+import '../../features/applications/view_request_detail_screen.dart';
 import '../../features/auth/forgot_password_screen.dart';
 import '../../features/auth/login_screen.dart';
 import '../../features/auth/otp_screen.dart';
@@ -9,6 +10,7 @@ import '../../features/auth/register_screen.dart';
 import '../../features/auth/splash_screen.dart';
 import '../../features/auth/welcome_screen.dart';
 import '../../features/employer_jobs/add_job_screen.dart';
+import '../../features/employer_jobs/application_detail_screen.dart';
 import '../../features/employer_jobs/applicants_screen.dart';
 import '../../features/employer_jobs/headhunting_screen.dart';
 import '../../features/employer_jobs/posted_jobs_screen.dart';
@@ -147,6 +149,19 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/employer/job/:id/applicants',
         builder: (_, state) =>
             ApplicantsScreen(jobId: state.pathParameters['id']!),
+      ),
+      GoRoute(
+        path: '/employer/job/:jobId/applicants/:appId',
+        builder: (_, state) => ApplicationDetailScreen(
+          jobId: state.pathParameters['jobId']!,
+          applicationId: state.pathParameters['appId']!,
+        ),
+      ),
+      GoRoute(
+        path: '/requests/:id',
+        builder: (_, state) => ViewRequestDetailScreen(
+          requestId: state.pathParameters['id']!,
+        ),
       ),
       GoRoute(
         path: '/employer/headhunting',

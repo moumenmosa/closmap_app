@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import '../../core/models/job_application.dart';
 import '../../core/models/job_post.dart';
 import '../../core/models/seeker_profile.dart';
@@ -16,10 +17,9 @@ class ApplicantsScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
-    final user = ref.watch(currentUserProvider).valueOrNull;
 
     return DefaultTabController(
-      length: 4,
+      length: 5,
       child: Scaffold(
         appBar: AppBar(
           title: Text(l10n.applicants),
@@ -27,7 +27,8 @@ class ApplicantsScreen extends ConsumerWidget {
             isScrollable: true,
             tabs: [
               Tab(text: l10n.newApplicants),
-              Tab(text: l10n.unlockedProfiles),
+              Tab(text: l10n.viewed),
+              const Tab(text: 'Interview'),
               Tab(text: l10n.rejectedProfiles),
               Tab(text: l10n.matchingCandidates),
             ],
@@ -41,16 +42,28 @@ class ApplicantsScreen extends ConsumerWidget {
               stream: ref.watch(applicationRepositoryProvider).watchJobApplications(jobId),
               builder: (context, snap) {
                 final apps = snap.data ?? [];
-                final pending =
-                    apps.where((a) => a.status == ApplicationStatus.pending).toList();
-                final rejected =
-                    apps.where((a) => a.status == ApplicationStatus.rejected).toList();
+                final pending = apps
+                    .where((a) => a.status == ApplicationStatus.pending)
+                    .toList();
+                final shortlisted = apps
+                    .where((a) => a.status == ApplicationStatus.shortlisted)
+                    .toList();
+                final interview = apps
+                    .where((a) => a.status == ApplicationStatus.interview)
+                    .toList();
+                final offered = apps
+                    .where((a) => a.status == ApplicationStatus.offered)
+                    .toList();
+                final rejected = apps
+                    .where((a) => a.status == ApplicationStatus.rejected)
+                    .toList();
 
                 return TabBarView(
                   children: [
-                    _list(context, ref, pending, l10n, user, job),
-                    _unlocked(context, ref, l10n, user),
-                    _list(context, ref, rejected, l10n, user, job, showActions: false),
+                    _list(context, pending, l10n),
+                    _list(context, [...shortlisted, ...offered], l10n),
+                    _list(context, interview, l10n),
+                    _list(context, rejected, l10n, showActions: false),
                     _matching(context, ref, l10n, job),
                   ],
                 );
@@ -64,11 +77,8 @@ class ApplicantsScreen extends ConsumerWidget {
 
   Widget _list(
     BuildContext context,
-    WidgetRef ref,
     List<JobApplication> apps,
-    AppLocalizations l10n,
-    dynamic user,
-    JobPost? job, {
+    AppLocalizations l10n, {
     bool showActions = true,
   }) {
     if (apps.isEmpty) return EmptyState(message: l10n.noResults);
@@ -79,102 +89,10 @@ class ApplicantsScreen extends ConsumerWidget {
         return ListTile(
           title: Text(a.seekerName),
           subtitle: Text(a.status.name),
-          onTap: () => Navigator.of(context).push(
-            MaterialPageRoute(
-              builder: (_) => SeekerPreviewScreen(
-                seekerId: a.seekerId,
-                job: job,
-              ),
-            ),
+          trailing: StatusChip(status: a.status.name),
+          onTap: () => context.push(
+            '/employer/job/$jobId/applicants/${a.id}',
           ),
-          trailing: showActions
-              ? Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    IconButton(
-                      icon: const Icon(Icons.check, color: Colors.green),
-                      onPressed: () => _updateStatus(
-                        context,
-                        ref,
-                        a,
-                        ApplicationStatus.viewed,
-                        l10n,
-                      ),
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.close, color: Colors.red),
-                      onPressed: () => _updateStatus(
-                        context,
-                        ref,
-                        a,
-                        ApplicationStatus.rejected,
-                        l10n,
-                      ),
-                    ),
-                  ],
-                )
-              : null,
-        );
-      },
-    );
-  }
-
-  Future<void> _updateStatus(
-    BuildContext context,
-    WidgetRef ref,
-    JobApplication app,
-    ApplicationStatus status,
-    AppLocalizations l10n,
-  ) async {
-    await ref
-        .read(applicationRepositoryProvider)
-        .updateApplicationStatus(app.id, status);
-    await ref.read(notificationServiceProvider).send(
-          userId: app.seekerId,
-          subject: l10n.applicants,
-          body: '${app.jobTitle}: ${status.name}',
-          route: '/applications',
-        );
-  }
-
-  Widget _unlocked(
-    BuildContext context,
-    WidgetRef ref,
-    AppLocalizations l10n,
-    dynamic user,
-  ) {
-    if (user == null) return const SizedBox.shrink();
-    return StreamBuilder(
-      stream: ref
-          .watch(applicationRepositoryProvider)
-          .watchApprovedViewRequests(user.uid, jobId: jobId),
-      builder: (context, snap) {
-        final reqs = snap.data ?? [];
-        if (reqs.isEmpty) return EmptyState(message: l10n.unlockedProfiles);
-        return ListView.builder(
-          itemCount: reqs.length,
-          itemBuilder: (_, i) {
-            final r = reqs[i];
-            return FutureBuilder<SeekerProfile?>(
-              future: ref.read(userRepositoryProvider).getSeekerProfile(r.seekerId),
-              builder: (context, pSnap) {
-                final name = pSnap.data?.latestJobTitle ?? r.seekerId;
-                return ListTile(
-                  title: Text(name),
-                  subtitle: Text(r.jobTitle.isEmpty ? l10n.headhunting : r.jobTitle),
-                  trailing: const Icon(Icons.lock_open, color: Colors.green),
-                  onTap: () => Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (_) => SeekerPreviewScreen(
-                        seekerId: r.seekerId,
-                        job: null,
-                      ),
-                    ),
-                  ),
-                );
-              },
-            );
-          },
         );
       },
     );

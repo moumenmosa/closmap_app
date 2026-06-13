@@ -56,6 +56,15 @@ class SideDrawer extends ConsumerWidget {
               ),
             if (user.role == UserRole.employer)
               ListTile(
+                leading: const Icon(Icons.work_outline),
+                title: Text(l10n.jobPosts),
+                onTap: () {
+                  Navigator.pop(context);
+                  context.push('/employer/jobs');
+                },
+              ),
+            if (user.role == UserRole.employer)
+              ListTile(
                 leading: const Icon(Icons.person_search_outlined),
                 title: Text(l10n.headhunting),
                 onTap: () {
